@@ -10,5 +10,3 @@ df = pd.read_excel(FILE_PATH)
 print(df.columns)
 
 lalalx
-
-more mod
