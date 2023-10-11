@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>sort_RAFT_table</Name>
     <RootNamespace>sort_RAFT_table</RootNamespace>
-    <InterpreterId>CondaEnv|CondaEnv|sort_RAFT_table</InterpreterId>
+    <InterpreterId>Global|VisualStudio|sort_RAFT_table</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|sort_RAFT_table" />
+    <InterpreterReference Include="Global|VisualStudio|sort_RAFT_table" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
