@@ -1,50 +1,5 @@
-INPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC)_temp.xlsx"
-
-from this import d
-import pandas as pd
-import os
-
-#1. read data from excel file to pd dataframe
-df = pd.read_excel(INPUT_FILE_PATH) #reads excel file to pandas dataframe
-
-
-#2. restructure the dataframe
-    
-df.dropna(inplace = True, how = "all") #drop all completely empty rows
-df = df.drop(df.columns[0],axis=1) #drop first column (legend in the excel file)
-df.reset_index(drop=True, inplace=True) #reset index after row removing
-
-    #2.1. change header of dataframe to more readable names (recently in header only t0h, t1h, t2h, etc. or unnamed)-->(e.g., t0h-Mn)
-        #2.1.1. change header of first column(Legend) to "Unnamed 1"
-column_names = df.columns
-df.rename(columns={column_names[0]: "Unnamed 1"}, inplace=True)
-        #2.1.2. replace header (first row in original document contained only information about time of sampling) with the second row (information about the data in the column (without time of sampling)))
-new_header = df.iloc[0] #grab the first row for the header
-df = df[1:] #take the data less the header row
-df.columns = new_header #set the header row as the df header
-
-        #2.1.3. add information about time to the header (e.g. t0h-Mn)
-for col in df.columns:
-    if not any(keyword in col for keyword in ['sample determiner', 'reactor', 'date', 'solution', 'data', 'comments']):
-        # If non of the keywords is found in the column name, change the column name
-            
-        
-        
-            #erstes Kriterium: t0h, t1h, t2h, etc. muss in den Namen rein (startend bei t0h). Wenn erkannt wird, dass es den dann kommenden header (z.B. Mn) schon gibt, 
-            ##dann wird der folgende header mit der neuen Zeit (z.B. t1h) versehen
-            #zweites Kriterium: die zweite Zeile wird zur Kommentarspalte für den header entweder "(" als Startpunkt des Kommentars oder "-->"
-            #drittes Kriterium: dritte Zeile wird zur Einheitenzeile "[" als Startpunkt dafür 
-        new_col_name = col + 'iii'
-        df.rename(columns={col: new_col_name}, inplace=True)
-
-
-
-
-
-
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-'Overview of data in data frame'
+'Overview of data in Excel file'
 
 #row 1 = legend and time stamps for data
 #row 2 = legend for data (yield, Mw, Mn, PDI, etc.)
@@ -94,7 +49,81 @@ for col in df.columns:
 #column 90(from row 3): content of reactor gelated (bulk, not hood or precipiate) (0,1,2 --> 0 = no, 1 = slightly/partly, 2 = fully))
 #column 91(from row 3): use data for AI (0,1 --> False or True) (if empty, the decision should be made by this programme)
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#print(df.columns) #show all column names
+
+######################################################
+
+#Start of the programme
+
+######################################################
+
+
+
+# 1. Import of necessary packages
+
+import pandas as pd
+import os
+import re
+
+#######################################################
+
+# 2. Definition of the input and output file path for the Excel documents
+INPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC).xlsx"
+OUTPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC)_temp.xlsx"
+
+
+
+# 3. read data from excel file to pd dataframe
+df = pd.read_excel(INPUT_FILE_PATH) #reads excel file to pandas dataframe
+
+
+# 4. restructure the dataframe
+   #4.1. Basic changes 
+df.dropna(inplace = True, how = "all") #drop all completely empty rows
+df = df.drop(df.columns[0],axis=1) #drop first column (legend in the excel file)
+df.reset_index(drop=True, inplace=True) #reset index after row removing
+
+
+    # 4.2. change header of dataframe to more readable names (recently in header only t0h, t1h, t2h, etc. or unnamed)-->(e.g., t0h-Mn)
+  
+        #4.2.1. replace header (first row in original document contained only information about time of sampling) with the second row (information about the data in the column (without time of sampling)))
+new_header = df.iloc[0] #grab the first row for the header
+df = df[1:] #remove header row from the dataframe
+df.columns = new_header #set data from the initial first row as header
+df.columns = df.columns.map(lambda x: re.sub(r'\n', '', x)) #remove all line breaks in column names
+
+
+
+
+        #4.2.2. add information about time to the header (e.g. t0h-Mn)
+times_list = ["t0h", "t1h", "t2h", "t4h", "t6h", "t8h", "t10h", "t15h"] #list of all times of sampling
+new_col_names =[]
+times_list_idx = 0
+
+           # 4.2.2.1 iterate over all column names
+for col in df:
+    # If none of the keywords is found in the column name, change the column name and append it to the new column names list
+    if not any(keyword in col for keyword in ['sample determiner', 'reactor', 'date', 'solution', 'data', 'comments', 'Standard', 'Peakrange']):
+        
+        col_new = times_list[times_list_idx] + "-" + col
+        if col_new in new_col_names:
+            times_list_idx += 1
+            col_new = times_list[times_list_idx] + "-" + col
+            new_col_names.append(col_new)           
+            
+        else:
+            new_col_names.append(col_new)
+
+    #If one of the keywords is in the column name, do not change the column name and append it to the new column names list
+    else:
+        col_new = col
+        new_col_names.append(col_new)
+
+        # 4.2.2.2 rename all columns with the new column names
+df.columns = new_col_names
+
+
+# 5. save the dataframe to excel file
+
 df.to_excel(OUTPUT_FILE_PATH, index=False)
