@@ -124,6 +124,25 @@ for col in df:
 df.columns = new_col_names
 
 
+
+
+        #4.3. split first column (sample determiner) into 4 columns (experiment determiner, RAFT-Agent, monomer, solvent) but keep the first column (sample determiner) in the dataframe
+            #4.3.1. drop all rows with empty first column ('sample determiner')
+df = df.dropna(subset=[df.columns[0]], how='all')
+            #4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe and drop the first column (sample determiner)
+split_data = df['sample determiner'].str.split('-', expand=True)
+split_data.columns = ['Abbreviation','experiment number', 'experiment subnumber', 'experiment determiner', 'monomer','RAFT-Agent', 'solvent']
+df = pd.concat([split_data, df], axis =1, sort=False)
+df =df.drop(columns = 'sample determiner')
+            #4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number and experiment subnumber), move it to the first column and drop the columns (abbreviation, experiment number, experiment subnumber)
+df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
+df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
+df = df.drop(columns = ['Abbreviation', 'experiment number', 'experiment subnumber'])
+
+
+#einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
+
+
 # 5. save the dataframe to excel file
 
 df.to_excel(OUTPUT_FILE_PATH, index=False)
