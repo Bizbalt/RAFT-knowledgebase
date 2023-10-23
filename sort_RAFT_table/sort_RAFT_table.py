@@ -62,6 +62,7 @@
 
 # 1. Import of necessary packages
 
+from types import AsyncGeneratorType
 import pandas as pd
 import os
 import re
@@ -141,6 +142,10 @@ df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], d
 df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
 df = df.drop(columns = ['Abbreviation', 'experiment number', 'experiment subnumber'])
 
+            #4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent and solvent)
+df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
+
+
 ###################################################################
 
 # 5. curation criteria
@@ -151,23 +156,48 @@ discarded_df = discarded_df.reset_index(drop=True)
 df.drop(df[df['use data for AI'] == 0].index, inplace = True)
 df = df.reset_index(drop=True)
 
-print(discarded_df)
+        #5.2. 
 
 #einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
 
+###################################################################
 
+#6. check which data is still missing to have performed at least each experiment once
+import itertools
 
+    #6.1. Define the options for the three variables in the experiment 
+RAFTagent_options = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+monomer_options = ['1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
+solvent_options = ['DMF', 'DMSO', 'Tol']
+
+    #6.2. Create a list to store the permutations
+permutations = []
+
+    #6.3. Generate permutations for the options
+for RAFTagent_options, monomer_options, solvent_options in itertools.product(RAFTagent_options, monomer_options, solvent_options):
+    # Build the new string with the chosen options
+    new_string = f'{monomer_options}-{RAFTagent_options}-{solvent_options}'
+    permutations.append(new_string)
+ 
+    #6.4. Create a dataframe from the list of permutations
+permutations_df = pd.DataFrame(permutations, columns = ['possible sample determiner-permutations'])
+
+    #6.5. Compare the permutations dataframe with the curated dataframe from the excel file
+       #6.5.1. Check if the permutations are part of the existing dataframe
+       #       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted 
+permutations_df.drop(permutations_df[permutations_df['possible sample determiner-permutations'].isin(df['possible sample determiner-original'])].index, inplace = True)
 
 
 
 # 5. save the dataframe to excel file
 
     #5.1. # create a excel writer object
-with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
+'''with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
 
 
         # use to_excel function and specify the sheet_name and index 
         # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-    
+    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+'''   
