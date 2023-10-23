@@ -156,7 +156,27 @@ discarded_df = discarded_df.reset_index(drop=True)
 df.drop(df[df['use data for AI'] == 0].index, inplace = True)
 df = df.reset_index(drop=True)
 
-        #5.2. 
+        #5.2. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
+            #5.2.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or yield columns)
+regex_Mn = r't\d+h-Mn'
+regex_Mn = r't\d+h-Mn'
+regex_dispersity = r't\d+h-Ð'
+regex_yield = r't\d+h-yield'
+            
+            #5.2.2. for Mn remove ooc and replace > 100.000 g/mol with NaN
+
+            #5.2.3. for Mw remove ooc and replace > 100.000 g/mol with NaN
+
+            #5.2.4. for dispersity remove > 2.2 with NaN
+
+            #5.2.5. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+
+
+
+#5.3. remove all datasets (rows) which have less than 4 full (Mn,Mw, D) SEC data points or NMR data points(yields)
+
+#5.4. if reactor underfilled == 2, remove row
+
 
 #einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
 
@@ -189,9 +209,9 @@ permutations_df.drop(permutations_df[permutations_df['possible sample determiner
 
 
 
-# 5. save the dataframe to excel file
+# 7. save the dataframe to excel file
 
-    #5.1. # create a excel writer object
+    #7.1. # create an excel writer object
 '''with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
 
 
