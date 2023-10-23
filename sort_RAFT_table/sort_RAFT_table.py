@@ -69,7 +69,7 @@ import re
 #######################################################
 
 # 2. Definition of the input and output file path for the Excel documents
-INPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC).xlsx"
+INPUT_FILE_PATH = "2023_07_07 - evaluation table (NMR and SEC).xlsx"
 OUTPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC)_temp.xlsx"
 
 
@@ -77,6 +77,8 @@ OUTPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (
 # 3. read data from excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH) #reads excel file to pandas dataframe
 
+
+#######################################################
 
 # 4. restructure the dataframe
    #4.1. Basic changes 
@@ -129,20 +131,43 @@ df.columns = new_col_names
         #4.3. split first column (sample determiner) into 4 columns (experiment determiner, RAFT-Agent, monomer, solvent) but keep the first column (sample determiner) in the dataframe
             #4.3.1. drop all rows with empty first column ('sample determiner')
 df = df.dropna(subset=[df.columns[0]], how='all')
-            #4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe and drop the first column (sample determiner)
+            #4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe (and drop the first column (sample determiner))
 split_data = df['sample determiner'].str.split('-', expand=True)
 split_data.columns = ['Abbreviation','experiment number', 'experiment subnumber', 'experiment determiner', 'monomer','RAFT-Agent', 'solvent']
 df = pd.concat([split_data, df], axis =1, sort=False)
-df =df.drop(columns = 'sample determiner')
+#df =df.drop(columns = 'sample determiner')
             #4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number and experiment subnumber), move it to the first column and drop the columns (abbreviation, experiment number, experiment subnumber)
 df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
 df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
 df = df.drop(columns = ['Abbreviation', 'experiment number', 'experiment subnumber'])
 
+###################################################################
+
+# 5. curation criteria
+
+        #5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
+discarded_df = df[df['use data for AI'] == 0]
+discarded_df = discarded_df.reset_index(drop=True)
+df.drop(df[df['use data for AI'] == 0].index, inplace = True)
+df = df.reset_index(drop=True)
+
+print(discarded_df)
 
 #einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
 
 
+
+
+
+
 # 5. save the dataframe to excel file
 
-df.to_excel(OUTPUT_FILE_PATH, index=False)
+    #5.1. # create a excel writer object
+with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
+
+
+        # use to_excel function and specify the sheet_name and index 
+        # to store the dataframe in specified sheet
+    df.to_excel(writer, sheet_name='utilizable samples', index=False)
+    discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
+    
