@@ -159,17 +159,28 @@ df = df.reset_index(drop=True)
         #5.2. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
             #5.2.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or yield columns)
 regex_Mn = r't\d+h-Mn'
-regex_Mn = r't\d+h-Mn'
-regex_dispersity = r't\d+h-Ð'
+regex_Mw = r't\d+h-Mw'
+regex_dispersity = r't\d+h-\u00d0'
 regex_yield = r't\d+h-yield'
             
-            #5.2.2. for Mn remove ooc and replace > 100.000 g/mol with NaN
+            #5.2.2. for Mn, Mw remove ooc and replace > 100.000 g/mol with NaN
+                # Filter columns that match the pattern
+filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
+                # Iterate over the matched columns and rows
+for column_name in filtered_columns_molar_mass:
+    for i in range(len(df)):
+        value = df[column_name][i]
+                    # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
+        if isinstance(value, str) and re.search(r'ooc', value):
+            df[column_name] = df[column_name].replace(value, 'NaN')
+                    #Check if value is a float and larger than 100000, if so: replace with NaN
+        elif float(value) > 100000:
+            df[column_name] = df[column_name].replace(value, 'NaN')
+        
 
-            #5.2.3. for Mw remove ooc and replace > 100.000 g/mol with NaN
+            #5.2.3. for dispersity remove > 2.2 with NaN
 
-            #5.2.4. for dispersity remove > 2.2 with NaN
-
-            #5.2.5. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+            #5.2.4. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
 
 
 
@@ -181,7 +192,7 @@ regex_yield = r't\d+h-yield'
 #einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
 
 ###################################################################
-
+'''
 #6. check which data is still missing to have performed at least each experiment once
 import itertools
 
@@ -206,18 +217,18 @@ permutations_df = pd.DataFrame(permutations, columns = ['possible sample determi
        #6.5.1. Check if the permutations are part of the existing dataframe
        #       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted 
 permutations_df.drop(permutations_df[permutations_df['possible sample determiner-permutations'].isin(df['possible sample determiner-original'])].index, inplace = True)
-
+'''
 
 
 # 7. save the dataframe to excel file
 
     #7.1. # create an excel writer object
-'''with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
+with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
 
 
         # use to_excel function and specify the sheet_name and index 
         # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
-'''   
+    #permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+   
