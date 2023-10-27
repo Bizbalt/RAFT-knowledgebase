@@ -151,25 +151,30 @@ df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agen
 ###################################################################
 
 # 5. curation criteria
-
-        #5.0. if "NaN" or 'NA' in column: remove with np.nan
-df.replace('NaN', np.nan, inplace=True)
-df.replace('NA', np.nan, inplace=True)
-
         #5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
 discarded_df = df[df['use data for AI'] == 0]
 discarded_df = discarded_df.reset_index(drop=True)
 df.drop(df[df['use data for AI'] == 0].index, inplace = True)
 df = df.reset_index(drop=True)
 
-        #5.2. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
-            #5.2.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or yield columns)
+
+        #5.2. if reactor underfilled == 2, remove row and add row to new dataframe which is later printed to excel file as discarded samples
+discarded_df2 = df[df['reactor is underfilled after polymerization?'] == 2]
+new_df = pd.concat([discarded_df, discarded_df2])
+discarded_df = new_df
+discarded_df.reset_index(drop=True)
+df.drop(df[df['reactor is underfilled after polymerization?'] == 2].index, inplace = True)
+df = df.reset_index(drop=True)
+
+
+        #5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
+            #5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or yield columns)
 regex_Mn = r't\d+h-Mn'
 regex_Mw = r't\d+h-Mw'
 regex_dispersity = r't\d+h-\u00d0'
 regex_yield = r't\d+h-yield'
             
-            #5.2.2. for Mn, Mw remove ooc and replace > 100.000 g/mol with NaN
+            #5.3.2. for Mn, Mw remove ooc and replace > 100.000 g/mol with NaN
                 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
                 # Iterate over the matched columns and rows
@@ -185,7 +190,8 @@ for column_name in filtered_columns_molar_mass:
         
 ''' Activation maybe later (if necessary)
 
-            #5.2.3. for dispersity remove > 2.2 with NaN 
+            #5.2.3. for dispersity remove > 2.2 with NaN and also remove the corresponding Mn and Mw values 
+            #(the Mn and Mw parts still need to be implemented)
                 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_dispersity, col)]
                 # Iterate over the matched columns and rows
@@ -199,8 +205,8 @@ for column_name in filtered_columns_molar_mass:
 '''
 
 
-            #5.2.4. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
-                #5.2.4.1. remove negative yields (< -5%)
+            #5.3.4. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+                #5.3.4.1. remove negative yields (< -5%)
 filtered_columns_yield = [col for col in df.columns if re.match(regex_yield, col)]
 for column_name in filtered_columns_yield:
     for i in range(len(df)):
@@ -209,7 +215,7 @@ for column_name in filtered_columns_yield:
         if float(value) < -0.05:
             df[column_name] = df[column_name].replace(value, np.nan)
                 
-                #5.2.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+                #5.3.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
                     # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
 threshold = 0.1
 
@@ -220,19 +226,21 @@ for i in range(1, len(df)):
        previous_column = filtered_columns_yield[col - 1]
        current_value = df.at[i, current_column]
        previous_value = df.at[i, previous_column]
-
+                            #check if both values for comparison are floats, then compare them
        if isinstance(current_value, float) and isinstance (previous_value, float):
             if current_value < (previous_value - threshold):
                 df.at[i, current_column] = np.nan
        else:
             continue
             
-            #5.2.5. for Mn, Mw, dispersity, yield, remove all values which are NaN
-                       
+            #5.3.5. for Mn, Mw, dispersity, yield, remove all values which are NaN to np.nan
+df.replace('NaN', np.nan, inplace=True)
+df.replace('NA', np.nan, inplace=True)                     
+
 
 #5.3. remove all datasets (rows) which have less than 4 full (Mn,Mw, D) SEC data points or NMR data points(yields)
 
-#5.4. if reactor underfilled == 2, remove row
+
 
 
 #einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
