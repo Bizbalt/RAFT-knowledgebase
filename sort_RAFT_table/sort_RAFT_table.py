@@ -63,6 +63,8 @@
 # 1. Import of necessary packages
 
 from types import AsyncGeneratorType
+import numpy as np 
+from numpy import negative, rec
 import pandas as pd
 import os
 import re
@@ -150,6 +152,10 @@ df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agen
 
 # 5. curation criteria
 
+        #5.0. if "NaN" or 'NA' in column: remove with np.nan
+df.replace('NaN', np.nan, inplace=True)
+df.replace('NA', np.nan, inplace=True)
+
         #5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
 discarded_df = df[df['use data for AI'] == 0]
 discarded_df = discarded_df.reset_index(drop=True)
@@ -172,17 +178,57 @@ for column_name in filtered_columns_molar_mass:
         value = df[column_name][i]
                     # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
         if isinstance(value, str) and re.search(r'ooc', value):
-            df[column_name] = df[column_name].replace(value, 'NaN')
+            df[column_name] = df[column_name].replace(value, np.nan)
                     #Check if value is a float and larger than 100000, if so: replace with NaN
         elif float(value) > 100000:
-            df[column_name] = df[column_name].replace(value, 'NaN')
+            df[column_name] = df[column_name].replace(value, np.nan)
         
+''' Activation maybe later (if necessary)
 
-            #5.2.3. for dispersity remove > 2.2 with NaN
+            #5.2.3. for dispersity remove > 2.2 with NaN 
+                # Filter columns that match the pattern
+filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_dispersity, col)]
+                # Iterate over the matched columns and rows
+for column_name in filtered_columns_molar_mass:
+    for i in range(len(df)):
+        value = df[column_name][i]
+                    #Check if value is a float and larger than 2.2, if so: replace with NaN
+        if float(value) > 2.2:
+            df[column_name] = df[column_name].replace(value, np.nan)
+            
+'''
+
 
             #5.2.4. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+                #5.2.4.1. remove negative yields (< -5%)
+filtered_columns_yield = [col for col in df.columns if re.match(regex_yield, col)]
+for column_name in filtered_columns_yield:
+    for i in range(len(df)):
+        value = df[column_name][i]
+        #check if yield is negative (larger than 5% negative)
+        if float(value) < -0.05:
+            df[column_name] = df[column_name].replace(value, np.nan)
+                
+                #5.2.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+                    # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
+threshold = 0.1
 
+                        # Iterate through the rows and perform the comparisons
+for i in range(1, len(df)):
+    for col in range(1,len(filtered_columns_yield)):
+       current_column = filtered_columns_yield[col]
+       previous_column = filtered_columns_yield[col - 1]
+       current_value = df.at[i, current_column]
+       previous_value = df.at[i, previous_column]
 
+       if isinstance(current_value, float) and isinstance (previous_value, float):
+            if current_value < (previous_value - threshold):
+                df.at[i, current_column] = np.nan
+       else:
+            continue
+            
+            #5.2.5. for Mn, Mw, dispersity, yield, remove all values which are NaN
+                       
 
 #5.3. remove all datasets (rows) which have less than 4 full (Mn,Mw, D) SEC data points or NMR data points(yields)
 
