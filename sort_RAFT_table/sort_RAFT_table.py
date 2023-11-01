@@ -174,16 +174,21 @@ df.drop(df[df['use data for AI'] == 0].index, inplace = True)
 df = df.reset_index(drop=True)
 
 
-        #5.2. if reactor underfilled == 2, remove row and add row to new dataframe which is later printed to excel file as discarded samples
-discarded_df2 = df[df['reactor is underfilled after polymerization?'] == 2].copy()
+        #5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel file as discarded samples
+REACTOR_UNDERFILLED_DETERMINER = 1.1  
+            
+discarded_df2 = df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER].copy()
+            # Create a new column 'criterium' with a default value in discarded_df
 discarded_df2['discarding criterium'] = None
-discarded_df2 = discarded_df.reset_index(drop=True)
-discarded_df2.loc[discarded_df2['reactor is underfilled after polymerization?'] == 2, 'discarding criterium'] = 'underfilled'
+discarded_df2 = discarded_df2.reset_index(drop=True)
+            # Fill the 'criteria' column where 'reactor is underfilled after polymerization?' is >= 1   
+discarded_df2.loc[discarded_df2['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER, 'discarding criterium'] = 'underfilled'
 new_df = pd.concat([discarded_df, discarded_df2])
 discarded_df = new_df
 discarded_df.reset_index(drop=True)
-
-df.drop(df[df['reactor is underfilled after polymerization?'] == 2].index, inplace = True)
+            # Drop all rows where 'reactor is underfilled after polymerization?' is >= 1 from original dataframe
+df.drop(df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER].index, inplace = True)
+            #reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
 
