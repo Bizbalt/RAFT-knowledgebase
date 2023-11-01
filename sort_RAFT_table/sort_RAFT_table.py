@@ -62,6 +62,7 @@
 
 # 1. Import of necessary packages
 
+from hmac import new
 from tkinter import N
 from types import AsyncGeneratorType
 import numpy as np 
@@ -161,19 +162,30 @@ df.replace('n/a', np.nan, inplace=True)
 
 
         #5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
-discarded_df = df[df['use data for AI'] == 0]
+discarded_df = df[df['use data for AI'] == 0].copy()
+            # Create a new column 'criterium' with a default value in discarded_df
+discarded_df['discarding criterium'] = None
 discarded_df = discarded_df.reset_index(drop=True)
+            # Fill the 'criteria' column where 'use data for AI' is 0
+discarded_df.loc[discarded_df['use data for AI'] == 0, 'discarding criterium'] = 'use-data-for-AI=0'
+            # Drop all rows where 'use data for AI' is 0 from original dataframe
 df.drop(df[df['use data for AI'] == 0].index, inplace = True)
+            #reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
 
         #5.2. if reactor underfilled == 2, remove row and add row to new dataframe which is later printed to excel file as discarded samples
-discarded_df2 = df[df['reactor is underfilled after polymerization?'] == 2]
+discarded_df2 = df[df['reactor is underfilled after polymerization?'] == 2].copy()
+discarded_df2['discarding criterium'] = None
+discarded_df2 = discarded_df.reset_index(drop=True)
+discarded_df2.loc[discarded_df2['reactor is underfilled after polymerization?'] == 2, 'discarding criterium'] = 'underfilled'
 new_df = pd.concat([discarded_df, discarded_df2])
 discarded_df = new_df
 discarded_df.reset_index(drop=True)
+
 df.drop(df[df['reactor is underfilled after polymerization?'] == 2].index, inplace = True)
 df = df.reset_index(drop=True)
+
 
 
         #5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
@@ -281,9 +293,17 @@ for index, row in df.iterrows():
                 #5.3.5.2 check if the number of complete SEC and NMR data points is smaller than the REMOVER_DECIDER
     if is_complete_NMR < REMOVER_DECIDER or is_complete_SEC < REMOVER_DECIDER:
         rows_to_remove.append(index)
-      
+    
                 #5.3.5.3. Remove the rows from df and add them to discarded_df
-discarded_df = df.loc[rows_to_remove].copy()
+discarded_df3 = df.loc[rows_to_remove].copy()
+                    # Create a new column 'criterium' with a default value in discarded_df
+discarded_df3['discarding criterium'] = None
+discarded_df3 = discarded_df3.reset_index(drop=True)
+                    # Fill the 'discarding criterium' column with new text, where the number of complete data points is smaller than the REMOVER_DECIDER
+discarded_df3.loc[discarded_df3['discarding criterium'].isna(), 'discarding criterium'] = f'less than {REMOVER_DECIDER} full data points in data set'
+new_df = pd.concat([discarded_df, discarded_df3])
+discarded_df = new_df
+                    #drop all rows from df which should be removed
 df = df.drop(rows_to_remove)
 
                 #5.3.5.4. Reset the indices of the dataframes
@@ -310,12 +330,12 @@ for RAFTagent_options, monomer_options, solvent_options in itertools.product(RAF
     permutations.append(new_string)
  
     #6.4. Create a dataframe from the list of permutations
-permutations_df = pd.DataFrame(permutations, columns = ['possible sample determiner-permutations'])
+permutations_df = pd.DataFrame(permutations, columns = ['Missing experiments determiners'])
 
     #6.5. Compare the permutations dataframe with the curated dataframe from the excel file
        #6.5.1. Check if the permutations are part of the existing dataframe
        #       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted 
-permutations_df.drop(permutations_df[permutations_df['possible sample determiner-permutations'].isin(df['possible sample determiner-original'])].index, inplace = True)
+permutations_df.drop(permutations_df[permutations_df['Missing experiments determiners'].isin(df['possible sample determiner-original'])].index, inplace = True)
 
 ###################################################################
 
