@@ -77,7 +77,6 @@ INPUT_FILE_PATH = "2023_07_07 - evaluation table (NMR and SEC).xlsx"
 OUTPUT_FILE_PATH = "C:\\Users\\xo37lay\\Desktop\\2023_07_07 - evaluation table (NMR and SEC)_temp.xlsx"
 
 
-
 # 3. read data from excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH) #reads excel file to pandas dataframe
 
@@ -99,9 +98,6 @@ df = df[1:] #remove header row from the dataframe
 df.columns = new_header #set data from the initial first row as header
 df.columns = df.columns.map(lambda x: re.sub(r'\n', '', x)) #remove all line breaks in column names
 
-
-
-
         #4.2.2. add information about time to the header (e.g. t0h-Mn)
 times_list = ["t0h", "t1h", "t2h", "t4h", "t6h", "t8h", "t10h", "t15h"] #list of all times of sampling
 new_col_names =[]
@@ -113,6 +109,7 @@ for col in df:
     if not any(keyword in col for keyword in ['sample determiner', 'reactor', 'date', 'solution', 'data', 'comments', 'Standard', 'Peakrange']):
         
         col_new = times_list[times_list_idx] + "-" + col
+        
         if col_new in new_col_names:
             times_list_idx += 1
             col_new = times_list[times_list_idx] + "-" + col
@@ -126,10 +123,8 @@ for col in df:
         col_new = col
         new_col_names.append(col_new)
 
-        # 4.2.2.2 rename all columns with the new column names
+         # 4.2.2.2 Rename all columns with the new column names
 df.columns = new_col_names
-
-
 
 
         #4.3. split first column (sample determiner) into 4 columns (experiment determiner, RAFT-Agent, monomer, solvent) but keep the first column (sample determiner) in the dataframe
@@ -139,7 +134,7 @@ df = df.dropna(subset=[df.columns[0]], how='all')
 split_data = df['sample determiner'].str.split('-', expand=True)
 split_data.columns = ['Abbreviation','experiment number', 'experiment subnumber', 'experiment determiner', 'monomer','RAFT-Agent', 'solvent']
 df = pd.concat([split_data, df], axis =1, sort=False)
-#df =df.drop(columns = 'sample determiner')
+
             #4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number and experiment subnumber), move it to the first column and drop the columns (abbreviation, experiment number, experiment subnumber)
 df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
 df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
@@ -147,7 +142,6 @@ df = df.drop(columns = ['Abbreviation', 'experiment number', 'experiment subnumb
 
             #4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent and solvent)
 df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
-
 
         #4.4. remove all trailing spaces from the column names  
 df.columns = df.columns.str.strip()
@@ -157,6 +151,15 @@ df.columns = df.columns.str.strip()
 ###################################################################
 
 # 5. curation criteria
+
+        #5.0 Remove all values which are NaN to np.nan
+df.replace('NaN', np.nan, inplace=True)
+df.replace('NA', np.nan, inplace=True)    
+df.replace('na', np.nan, inplace=True)
+df.replace('N/A', np.nan, inplace=True)
+df.replace('n/a', np.nan, inplace=True)
+
+
         #5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
 discarded_df = df[df['use data for AI'] == 0]
 discarded_df = discarded_df.reset_index(drop=True)
@@ -197,7 +200,7 @@ for column_name in filtered_columns_molar_mass:
         
 ''' Activation maybe later (if necessary)
 
-            #5.2.3. for dispersity remove > 2.2 with NaN and also remove the corresponding Mn and Mw values 
+            #5.3.3. for dispersity remove > 2.2 with NaN and also remove the corresponding Mn and Mw values 
             #(the Mn and Mw parts still need to be implemented)
                 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_dispersity, col)]
@@ -207,8 +210,7 @@ for column_name in filtered_columns_molar_mass:
         value = df[column_name][i]
                     #Check if value is a float and larger than 2.2, if so: replace with NaN
         if float(value) > 2.2:
-            df[column_name] = df[column_name].replace(value, np.nan)
-            
+            df[column_name] = df[column_name].replace(value, np.nan)            
 '''
 
 
@@ -224,7 +226,7 @@ for column_name in filtered_columns_yield:
                 
                 #5.3.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
                     # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
-threshold = 0.1   #10%
+threshold = 0.1   
 
                         # Iterate through the rows and perform the comparisons
 for i in range(1, len(df)):
@@ -240,23 +242,19 @@ for i in range(1, len(df)):
        else:
             continue
             
-            #5.3.5. for Mn, Mw, dispersity, yield, remove all values which are NaN to np.nan
-df.replace('NaN', np.nan, inplace=True)
-df.replace('NA', np.nan, inplace=True)                     
-
-
-#5.4. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(yields)
+        
+            #5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(yields)
 REMOVER_DECIDER = 4     #number of data points which are necessary to keep the data set
 rows_to_remove = []     #list of rows which should be removed
 
 
-#5.4.1.iterate through the rows  
+                #5.3.5.1. iterate through the rows  
 for index, row in df.iterrows():
     is_complete_SEC = 0
     is_complete_NMR = 0
     
-    #5.4.1.1. iterate through the time points for the SEC data points
-        #if one of the data points is NaN, add 0 to the is_complete variable
+                    #5.3.5.1.1. iterate through the time points for the SEC data points
+                        #if one of the data points is NaN, add 0 to the is_complete variable
     for time_point in times_list:
         if pd.isna(row[time_point + '-Mn']):
             is_complete_SEC += 0
@@ -266,13 +264,13 @@ for index, row in df.iterrows():
      
         elif pd.isna(row[time_point + '-\u00d0']):
             is_complete_SEC += 0
-        #if all data points are not NaN, add 1 to the is_complete variable
+                        #if all data points are not NaN, add 1 to the is_complete variable
         else: 
             is_complete_SEC += 1
         
-    #5.4.1.2. same as above for NMR data points
+                    #5.3.5.1.2. same as above for NMR data points
     for time_point in times_list:
-        #5.4.1.2.1 use all time points except t6h and t10h (only SEC sampling for those)
+                        #5.3.5.1.2.1. use all time points except t6h and t10h (only SEC sampling for those)
         if time_point != 't6h' and time_point != 't10h': 
 
              if pd.isna(row[time_point + '-yield']):
@@ -280,24 +278,25 @@ for index, row in df.iterrows():
              else:
                  is_complete_NMR += 1
             
-     #5.4.1.2 check if the number of complete SEC and NMR data points is smaller than the REMOVER_DECIDER
+                #5.3.5.2 check if the number of complete SEC and NMR data points is smaller than the REMOVER_DECIDER
     if is_complete_NMR < REMOVER_DECIDER or is_complete_SEC < REMOVER_DECIDER:
         rows_to_remove.append(index)
       
-#5.4.2 Remove the rows from df and add them to discarded_df
+                #5.3.5.3. Remove the rows from df and add them to discarded_df
 discarded_df = df.loc[rows_to_remove].copy()
 df = df.drop(rows_to_remove)
 
-#5.4.3. Reset the indices of the dataframes
+                #5.3.5.4. Reset the indices of the dataframes
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
+
 ###################################################################
 
 #6. check which data is still missing to have performed at least each experiment once
 import itertools
 
     #6.1. Define the options for the three variables in the experiment 
-RAFTagent_options = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+RAFTagent_options = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 monomer_options = ['1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
 solvent_options = ['DMF', 'DMSO', 'Tol']
 
@@ -318,13 +317,11 @@ permutations_df = pd.DataFrame(permutations, columns = ['possible sample determi
        #       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted 
 permutations_df.drop(permutations_df[permutations_df['possible sample determiner-permutations'].isin(df['possible sample determiner-original'])].index, inplace = True)
 
+###################################################################
 
 # 7. save the dataframe to excel file
-
     #7.1. # create an excel writer object
 with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
-
-
         # use to_excel function and specify the sheet_name and index 
         # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
