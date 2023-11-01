@@ -62,6 +62,7 @@
 
 # 1. Import of necessary packages
 
+from tkinter import N
 from types import AsyncGeneratorType
 import numpy as np 
 from numpy import negative, rec
@@ -148,6 +149,11 @@ df = df.drop(columns = ['Abbreviation', 'experiment number', 'experiment subnumb
 df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
 
 
+        #4.4. remove all trailing spaces from the column names  
+df.columns = df.columns.str.strip()
+
+
+
 ###################################################################
 
 # 5. curation criteria
@@ -174,7 +180,7 @@ regex_Mw = r't\d+h-Mw'
 regex_dispersity = r't\d+h-\u00d0'
 regex_yield = r't\d+h-yield'
             
-            #5.3.2. for Mn, Mw remove ooc and replace > 100.000 g/mol with NaN
+            #5.3.2. for Mn, Mw remove ooc and replace > 100.000 g/mol and 0 g/mol with NaN
                 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
                 # Iterate over the matched columns and rows
@@ -187,6 +193,7 @@ for column_name in filtered_columns_molar_mass:
                     #Check if value is a float and larger than 100000, if so: replace with NaN
         elif float(value) > 100000:
             df[column_name] = df[column_name].replace(value, np.nan)
+     
         
 ''' Activation maybe later (if necessary)
 
@@ -217,7 +224,7 @@ for column_name in filtered_columns_yield:
                 
                 #5.3.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
                     # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
-threshold = 0.1
+threshold = 0.1   #10%
 
                         # Iterate through the rows and perform the comparisons
 for i in range(1, len(df)):
@@ -238,15 +245,54 @@ df.replace('NaN', np.nan, inplace=True)
 df.replace('NA', np.nan, inplace=True)                     
 
 
-#5.3. remove all datasets (rows) which have less than 4 full (Mn,Mw, D) SEC data points or NMR data points(yields)
+#5.4. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(yields)
+REMOVER_DECIDER = 4     #number of data points which are necessary to keep the data set
+rows_to_remove = []     #list of rows which should be removed
 
 
+#5.4.1.iterate through the rows  
+for index, row in df.iterrows():
+    is_complete_SEC = 0
+    is_complete_NMR = 0
+    
+    #5.4.1.1. iterate through the time points for the SEC data points
+        #if one of the data points is NaN, add 0 to the is_complete variable
+    for time_point in times_list:
+        if pd.isna(row[time_point + '-Mn']):
+            is_complete_SEC += 0
+        
+        elif pd.isna(row[time_point + '-Mw']):
+            is_complete_SEC += 0    
+     
+        elif pd.isna(row[time_point + '-\u00d0']):
+            is_complete_SEC += 0
+        #if all data points are not NaN, add 1 to the is_complete variable
+        else: 
+            is_complete_SEC += 1
+        
+    #5.4.1.2. same as above for NMR data points
+    for time_point in times_list:
+        #5.4.1.2.1 use all time points except t6h and t10h (only SEC sampling for those)
+        if time_point != 't6h' and time_point != 't10h': 
 
+             if pd.isna(row[time_point + '-yield']):
+                  is_complete_NMR += 0
+             else:
+                 is_complete_NMR += 1
+            
+     #5.4.1.2 check if the number of complete SEC and NMR data points is smaller than the REMOVER_DECIDER
+    if is_complete_NMR < REMOVER_DECIDER or is_complete_SEC < REMOVER_DECIDER:
+        rows_to_remove.append(index)
+      
+#5.4.2 Remove the rows from df and add them to discarded_df
+discarded_df = df.loc[rows_to_remove].copy()
+df = df.drop(rows_to_remove)
 
-#einfügen der Kurationskriterien und speichern der gelöschten Reihen (zumindest mit Namen in einem neuen Excel Arbeitsblatt)
-
+#5.4.3. Reset the indices of the dataframes
+df = df.reset_index(drop=True)
+discarded_df = discarded_df.reset_index(drop=True)
 ###################################################################
-'''
+
 #6. check which data is still missing to have performed at least each experiment once
 import itertools
 
@@ -271,7 +317,6 @@ permutations_df = pd.DataFrame(permutations, columns = ['possible sample determi
        #6.5.1. Check if the permutations are part of the existing dataframe
        #       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted 
 permutations_df.drop(permutations_df[permutations_df['possible sample determiner-permutations'].isin(df['possible sample determiner-original'])].index, inplace = True)
-'''
 
 
 # 7. save the dataframe to excel file
@@ -284,5 +329,5 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
         # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-    #permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
    
