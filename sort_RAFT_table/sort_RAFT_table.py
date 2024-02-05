@@ -2,7 +2,7 @@
 'Overview of data in Excel file'
 
 # row 1 = legend and time stamps for data
-# row 2 = legend for data (yield, Mw, Mn, PDI, etc.)
+# row 2 = legend for data (conversion, Mw, Mn, PDI, etc.)
 
 # column 2 (from row 3): sample determiner (consists of MRG-046-G-A(experiment determiner)-letter(used RAFT-Agent)-number(used monomer)-abbreviation(used solvent))
 # column 3(from row 3): used reactor for reaction (1 to 15)
@@ -17,7 +17,7 @@
 # column 9(from row 3): peak smears into solvent or monomer peak (true or false))
 # column 10(from row 3): drop below zero occurred (true or false)(if no data is available, then the data was evaluated by hand)))
 # column 11(from row 3): double check was necessary (True or False) (if no data is available, then the data was evaluated by hand))
-# column 12(from row 3): Standard substance used for NMR determination of yield (Anisole or Trioxane)
+# column 12(from row 3): Standard substance used for NMR determination of conversion (Anisole or Trioxane)
 # column 13(from row 3): Peakrange (range or one number (if only one number, the automated tool by Julian Kimmig was used))
 # column 14(from row 3): Integral of the Peak assigned with the peakrange before (standard substance signal set to integral of 3 (anisole) or 6 (trioxane)))
 # column 15(from row 3): NMR determined Yield
@@ -70,7 +70,7 @@ import os
 
 # 2. Definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "2023_07_07 - evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = os.path.join(os.getcwd(), "2023_07_07 - evaluation table (NMR and SEC)_temp.xlsx")
+OUTPUT_FILE_PATH = os.path.join(os.getcwd(), "2023_07_07 - evaluation table (NMR and SEC)_curated.xlsx")
 
 # 3. read data from excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH)  # reads excel file to pandas dataframe
@@ -183,18 +183,19 @@ df.drop(df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFI
 # reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
+
 # 5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
-# 5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or yield columns)
+# 5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or conversion columns)
 regex_Mn = r't\d+h-Mn'
 regex_Mw = r't\d+h-Mw'
 regex_dispersity = r't\d+h-\u00d0'
-regex_yield = r't\d+h-yield'
+regex_conversion = r't\d+h-conversion'
 
 # 5.3.2. for Mn, Mw remove ooc and replace > 100.000 g/mol and 0 g/mol with NaN
 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
 # Iterate over the matched columns and rows
-for column_name in filtered_columns_molar_mass:
+for column_name in filtered_columns_molar_mass:  
     for i in range(len(df)):
         value = df[column_name][i]
         # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
@@ -219,25 +220,26 @@ for column_name in filtered_columns_molar_mass:
             df[column_name] = df[column_name].replace(value, np.nan)            
 '''
 
-# 5.3.4. for yield remove negative yields and yields which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
-# 5.3.4.1. remove negative yields (< -5%)
-filtered_columns_yield = [col for col in df.columns if re.match(regex_yield, col)]
-for column_name in filtered_columns_yield:
+# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+# 5.3.4.1. remove negative conversions (< -5%)
+filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
+for column_name in filtered_columns_conversion:
     for i in range(len(df)):
         value = df[column_name][i]
-        # check if yield is negative (larger than 5% negative)
+        # check if conversion is negative (larger than 5% negative)
         if float(value) < -0.05:
             df[column_name] = df[column_name].replace(value, np.nan)
+            
 
-            # 5.3.4.2. check if yield is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+            # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
             # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
 threshold = 0.1
 
 # Iterate through the rows and perform the comparisons
 for i in range(1, len(df)):
-    for col in range(1, len(filtered_columns_yield)):
-        current_column = filtered_columns_yield[col]
-        previous_column = filtered_columns_yield[col - 1]
+    for col in range(1, len(filtered_columns_conversion)):
+        current_column = filtered_columns_conversion[col]
+        previous_column = filtered_columns_conversion[col - 1]
         current_value = df.at[i, current_column]
         previous_value = df.at[i, previous_column]
         # check if both values for comparison are floats, then compare them
@@ -247,7 +249,7 @@ for i in range(1, len(df)):
         else:
             continue
 
-            # 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(yields)
+            # 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(conversions)
 REMOVER_DECIDER = 4  # number of data points which are necessary to keep the data set
 rows_to_remove = []  # list of rows which should be removed
 
@@ -258,7 +260,7 @@ for index, row in df.iterrows():
 
     # 5.3.5.1.1. iterate through the time points for the SEC data points
     # if one of the data points is NaN, add 0 to the is_complete variable
-    for time_point in times_list:
+    for time_point in times_list: 
         if pd.isna(row[time_point + '-Mn']):
             is_complete_SEC += 0
 
@@ -275,8 +277,8 @@ for index, row in df.iterrows():
     for time_point in times_list:
         # 5.3.5.1.2.1. use all time points except t6h and t10h (only SEC sampling for those)
         if time_point != 't6h' and time_point != 't10h':
-
-            if pd.isna(row[time_point + '-yield']):
+            if pd.isna(row[time_point + '-conversion']):
+               
                 is_complete_NMR += 0
             else:
                 is_complete_NMR += 1
