@@ -195,7 +195,7 @@ regex_conversion = r't\d+h-conversion'
 # Filter columns that match the pattern
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
 # Iterate over the matched columns and rows
-for column_name in filtered_columns_molar_mass:  
+for column_name in filtered_columns_molar_mass:
     for i in range(len(df)):
         value = df[column_name][i]
         # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
@@ -275,10 +275,9 @@ for index, row in df.iterrows():
 
             # 5.3.5.1.2. same as above for NMR data points
     for time_point in times_list:
-        # 5.3.5.1.2.1. use all time points except t6h and t10h (only SEC sampling for those)
+        # 5.3.5.1.2.1. use all-time points except t6h and t10h (only SEC sampling for those)
         if time_point != 't6h' and time_point != 't10h':
             if pd.isna(row[time_point + '-conversion']):
-               
                 is_complete_NMR += 0
             else:
                 is_complete_NMR += 1
