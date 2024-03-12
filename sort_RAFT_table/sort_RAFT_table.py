@@ -54,7 +54,7 @@
 
 ######################################################
 
-# Start of the programme
+# Start of the program
 
 ######################################################
 
@@ -115,8 +115,7 @@ for col in df:
     # If one of the keywords is in the column name, do not change the column name and append it to the new column
     # names list
     else:
-        col_new = col
-        new_col_names.append(col_new)
+        new_col_names.append(col)
 
         # 4.2.2.2 Rename all columns with the new column names
 df.columns = new_col_names
@@ -183,7 +182,6 @@ df.drop(df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFI
 # reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
-
 # 5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
 # 5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or conversion columns)
 regex_Mn = r't\d+h-Mn'
@@ -229,7 +227,6 @@ for column_name in filtered_columns_conversion:
         # check if conversion is negative (larger than 5% negative)
         if float(value) < -0.05:
             df[column_name] = df[column_name].replace(value, np.nan)
-            
 
             # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
             # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
@@ -260,7 +257,7 @@ for index, row in df.iterrows():
 
     # 5.3.5.1.1. iterate through the time points for the SEC data points
     # if one of the data points is NaN, add 0 to the is_complete variable
-    for time_point in times_list: 
+    for time_point in times_list:
         if pd.isna(row[time_point + '-Mn']):
             is_complete_SEC += 0
 
