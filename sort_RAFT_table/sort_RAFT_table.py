@@ -145,7 +145,7 @@ df.columns = df.columns.str.strip()
 
 # 5. curation criteria
 
-# 5.0 Remove all values which are NaN to np.nan
+# 5.0 Replace all values which are NaN to np.nan
 df.replace('NaN', np.nan, inplace=True)
 df.replace('NA', np.nan, inplace=True)
 df.replace('na', np.nan, inplace=True)
@@ -231,6 +231,7 @@ for column_name in filtered_columns_conversion:
             # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
             # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
 threshold = 0.1
+rows_to_remove = []  # list of rows which should be removed
 
 # Iterate through the rows and perform the comparisons
 for i in range(1, len(df)):
@@ -240,17 +241,48 @@ for i in range(1, len(df)):
         current_value = df.at[i, current_column]
         previous_value = df.at[i, previous_column]
         # check if both values for comparison are floats, then compare them
-        if isinstance(current_value, float) and isinstance(previous_value, float):
-            if current_value < (previous_value - threshold):
-                df.at[i, current_column] = np.nan
-        else:
-            continue
+        if not isinstance(current_value, float) and isinstance(previous_value, float):
+            print(f'Warning: Value at row {i} and column {current_column} or {previous_column} is not a float')
 
-            # 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(conversions)
+        # if the previous value is NaN, check the value from before the previous value
+        def check_decreasing_yield(value, col_index):
+            if np.isnan(value):
+                return False
+            previous_col = filtered_columns_conversion[col_index - 1]
+            previous_val = df.at[i, previous_col]
+            if np.isnan(previous_val):
+                if col_index == 1:
+                    return False
+                return check_decreasing_yield(value, col_index - 1)
+            return value < (previous_val - threshold)
+
+        if check_decreasing_yield(current_value, col):
+            # df.at[i, current_column] = np.nan
+            # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should be thrown out.
+            rows_to_remove.append(i)
+
+            # 5.3.4.3. Remove the rows from df and add them to discarded_df
+discarded_df3 = df.loc[rows_to_remove].copy()
+# Create a new column 'criterium' with a default value in discarded_df
+discarded_df3['discarding criterium'] = None
+discarded_df3 = discarded_df3.reset_index(drop=True)
+discarded_df3.loc[discarded_df3[
+                      'discarding criterium'].isna(), 'discarding criterium'] =\
+    f'Decreasing yield within kinetic more than {threshold} from one time point to the next time point'
+new_df = pd.concat([discarded_df, discarded_df3])
+discarded_df = new_df
+# drop all rows from df which should be removed
+df = df.drop(rows_to_remove)
+
+            # 5.3.4.4. Reset the indices of the dataframes
+df = df.reset_index(drop=True)
+discarded_df = discarded_df.reset_index(drop=True)
+
+# 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(conversions)
 REMOVER_DECIDER = 4  # number of data points which are necessary to keep the data set
 rows_to_remove = []  # list of rows which should be removed
 
-# 5.3.5.1. iterate through the rows
+    # 5.3.5.1. iterate through the rows
 for index, row in df.iterrows():
     is_complete_SEC = 0
     is_complete_NMR = 0
@@ -284,14 +316,14 @@ for index, row in df.iterrows():
         rows_to_remove.append(index)
 
         # 5.3.5.3. Remove the rows from df and add them to discarded_df
-discarded_df3 = df.loc[rows_to_remove].copy()
+discarded_df4 = df.loc[rows_to_remove].copy()
 # Create a new column 'criterium' with a default value in discarded_df
-discarded_df3['discarding criterium'] = None
-discarded_df3 = discarded_df3.reset_index(drop=True)
+discarded_df4['discarding criterium'] = None
+discarded_df4 = discarded_df4.reset_index(drop=True)
 # Fill the 'discarding criterium' column with new text, where the number of complete data points is smaller than the REMOVER_DECIDER
-discarded_df3.loc[discarded_df3[
+discarded_df4.loc[discarded_df4[
                       'discarding criterium'].isna(), 'discarding criterium'] = f'less than {REMOVER_DECIDER} full data points in data set'
-new_df = pd.concat([discarded_df, discarded_df3])
+new_df = pd.concat([discarded_df, discarded_df4])
 discarded_df = new_df
 # drop all rows from df which should be removed
 df = df.drop(rows_to_remove)
