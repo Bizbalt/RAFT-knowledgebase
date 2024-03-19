@@ -218,7 +218,7 @@ for column_name in filtered_columns_molar_mass:
             df[column_name] = df[column_name].replace(value, np.nan)            
 '''
 
-# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous timepoint by at least 10% (Method inaccuracy)
 # 5.3.4.1. remove negative conversions (< -5%)
 filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
 for column_name in filtered_columns_conversion:
@@ -228,7 +228,7 @@ for column_name in filtered_columns_conversion:
         if float(value) < -0.05:
             df[column_name] = df[column_name].replace(value, np.nan)
 
-            # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Ungenauigkeit der Methode)
+            # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Method inaccuracy)
             # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
 threshold = 0.1
 rows_to_remove = []  # list of rows which should be removed
@@ -245,7 +245,7 @@ for i in range(1, len(df)):
             print(f'Warning: Value at row {i} and column {current_column} or {previous_column} is not a float')
 
         # if the previous value is NaN, check the value from before the previous value
-        def check_decreasing_yield(value, col_index):
+        def check_decreasing_conversion(value, col_index):
             if np.isnan(value):
                 return False
             previous_col = filtered_columns_conversion[col_index - 1]
@@ -253,13 +253,20 @@ for i in range(1, len(df)):
             if np.isnan(previous_val):
                 if col_index == 1:
                     return False
-                return check_decreasing_yield(value, col_index - 1)
+                return check_decreasing_conversion(value, col_index - 1)
             return value < (previous_val - threshold)
 
-        if check_decreasing_yield(current_value, col):
+        if check_decreasing_conversion(current_value, col):
             # df.at[i, current_column] = np.nan
             # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should be thrown out.
             rows_to_remove.append(i)
+
+# remove rows with conversion below 0
+for idx, row in df.iterrows():
+    row_values = [row[filtered_col_conv] for filtered_col_conv in filtered_columns_conversion]
+    if np.average(row_values) < 0.01:
+        if not idx in rows_to_remove:
+            rows_to_remove.append(idx)
 
             # 5.3.4.3. Remove the rows from df and add them to discarded_df
 discarded_df3 = df.loc[rows_to_remove].copy()
@@ -268,7 +275,7 @@ discarded_df3['discarding criterium'] = None
 discarded_df3 = discarded_df3.reset_index(drop=True)
 discarded_df3.loc[discarded_df3[
                       'discarding criterium'].isna(), 'discarding criterium'] =\
-    f'Decreasing yield within kinetic more than {threshold} from one time point to the next time point'
+    f'Decreasing conversion within kinetic more than {threshold} from one time point to the next time point'
 new_df = pd.concat([discarded_df, discarded_df3])
 discarded_df = new_df
 # drop all rows from df which should be removed
