@@ -164,26 +164,31 @@ df.drop(df[df['use data for AI'] == 0].index, inplace=True)
 # reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
-# Todo: also remove "Precipitate in reactor?" != 0 AND "hood on top of reactor? (phase separation)" != 0 criteria
 # ToDo: We decided to throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
 #   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
 # 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel file as discarded samples
-REACTOR_UNDERFILLED_DETERMINER = 1.1
+    # 5.2.2 and 5.2.3 do the same with Precipitation and gelation/phaseseperation in the reactor
+criteria_and_threshold = {"reactor is underfilled after polymerization?": 1.1,
+                          "Precipitate in reactor?": 0.001,
+                          "hood on top of reactor? (phase separation)": 0.001}
+abbreviation_criteria = {"reactor is underfilled after polymerization?": "underfilled",
+                          "Precipitate in reactor?": "precipitate",
+                          "hood on top of reactor? (phase separation)": "phase separation"}
 
-discarded_df2 = df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER].copy()
-# Create a new column 'criterium' with a default value in discarded_df
-discarded_df2['discarding criterium'] = None
-discarded_df2 = discarded_df2.reset_index(drop=True)
-# Fill the 'criteria' column where 'reactor is underfilled after polymerization?' is >= 1
-discarded_df2.loc[discarded_df2[
-                      'reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER, 'discarding criterium'] = 'underfilled'
-new_df = pd.concat([discarded_df, discarded_df2])
-discarded_df = new_df
-discarded_df.reset_index(drop=True)
-# Drop all rows where 'reactor is underfilled after polymerization?' is >= 1 from original dataframe
-df.drop(df[df['reactor is underfilled after polymerization?'] >= REACTOR_UNDERFILLED_DETERMINER].index, inplace=True)
-# reset the index of the original dataframe
-df = df.reset_index(drop=True)
+for criteria, threshold in zip(criteria_and_threshold.keys(), criteria_and_threshold.values()):
+    _temp_df = df[df[criteria] >= threshold].copy()
+    # Create a new column 'criterium' with a default value in discarded_df
+    _temp_df['discarding criterium'] = None
+    _temp_df = _temp_df.reset_index(drop=True)
+    # Fill the 'criteria' column where 'reactor is underfilled after polymerization?' is >= 1
+    _temp_df.loc[_temp_df[criteria] >= threshold, 'discarding criterium'] = abbreviation_criteria[criteria]
+    new_df = pd.concat([discarded_df, _temp_df])
+    discarded_df = new_df
+    discarded_df.reset_index(drop=True)
+    # Drop all rows where 'reactor is underfilled after polymerization?' is >= 1 from original dataframe
+    df.drop(df[df[criteria] >= threshold].index, inplace=True)
+    # reset the index of the original dataframe
+    df = df.reset_index(drop=True)
 
 # 5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
 # 5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or conversion columns)
