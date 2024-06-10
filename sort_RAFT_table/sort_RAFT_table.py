@@ -1,70 +1,76 @@
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-'Overview of data in Excel file'
+"""
 
-# row 1 = legend and time stamps for data
-# row 2 = legend for data (conversion, Mw, Mn, PDI, etc.)
+Overview of data in Excel file
 
-# column 2 (from row 3): sample determiner (consists of MRG-046-G-A(experiment determiner)-letter(used RAFT-Agent)-number(used monomer)-abbreviation(used solvent))
-# column 3(from row 3): used reactor for reaction (1 to 15)
+row 1 = legend and time stamps for data
+row 2 = legend for data (conversion, Mw, Mn, PDI, etc.)
 
-# for t=0h
+column 2 (from row 3): sample determiner (consists of
+ MRG-046-G-A(experiment determiner)
+ letter(used RAFT-Agent)
+ number(used monomer)
+ abbreviation(used solvent))
+column 3(from row 3): used reactor for reaction (1 to 15)
 
-# column 4(from row 3): Mn from SEC (g/mol)
-# column 5(from row 3): Mw from SEC (g/mol)
-# column 6(from row 3): PDI from SEC (without unit)
-# column 7(from row 3): severe tailing or fronting (True or False)
-# column 8(from row 3): second distribution or multiple peaks(True or False)
-# column 9(from row 3): peak smears into solvent or monomer peak (true or false))
-# column 10(from row 3): drop below zero occurred (true or false)(if no data is available, then the data was evaluated by hand)))
-# column 11(from row 3): double check was necessary (True or False) (if no data is available, then the data was evaluated by hand))
-# column 12(from row 3): Standard substance used for NMR determination of conversion (Anisole or Trioxane)
-# column 13(from row 3): Peakrange (range or one number (if only one number, the automated tool by Julian Kimmig was used))
-# column 14(from row 3): Integral of the Peak assigned with the peakrange before (standard substance signal set to integral of 3 (anisole) or 6 (trioxane)))
-# column 15(from row 3): NMR determined Yield
+for t=0h
+column 4(from row 3): Mn from SEC (g/mol)
+column 5(from row 3): Mw from SEC (g/mol)
+column 6(from row 3): PDI from SEC (without unit)
+column 7(from row 3): severe tailing or fronting (True or False)
+column 8(from row 3): second distribution or multiple peaks(True or False)
+column 9(from row 3): peak smears into solvent or monomer peak (true or false))
+column 10(from row 3): drop below zero occurred (true or false)(if no data is available,
+ then the data was evaluated by hand)))
+column 11(from row 3): double check was necessary (True or False) (if no data is available,
+ then the data was evaluated by hand))
+column 12(from row 3): Standard substance used for NMR determination of conversion (Anisole or Trioxane)
+column 13(from row 3): Peakrange (range or one number
+ (if only one number, the automated tool by Julian Kimmig was used))
+column 14(from row 3): Integral of the Peak assigned with the peakrange before
+ (standard substance signal set to integral of 3 (anisole) or 6 (trioxane)))
+column 15(from row 3): NMR determined Yield
 
-# for t=1h
-# column 16(from row 3): Mn from SEC (g/mol)
-# column 17(from row 3): Mw from SEC (g/mol)
-# column 18(from row 3): PDI from SEC (without unit)
-# column 19(from row 3): severe tailing or fronting (True or False)
-# column 20(from row 3): second distribution or multiple peaks(True or False)
-# column 21(from row 3): peak smears into solvent or monomer peak (true or false))
-# column 22(from row 3): drop below zero occurred (true or false)(if no data is available, then the data was evaluated by hand)))
-# column 23(from row 3): double check was necessar (True or False) (if no data is available, then the data was evaluated by hand))
-# column 24(from row 3): Integral of the Peak assigned with the peakrange before (standard substance signal set to integral of 3 (anisole) or 6 (trioxane)))
-##column 25(from row 3):NMR determined Yield 
-
-
-# ... (until t=15h) (with differences for e.g. t = 6h (only NMR sampling))
-
-
-# column 82(from row 3): date of experiment
-# column 83(from row 3): name of used reactor combination (reflux, reactor assembly, control unit)
-# colum 84(from row 3): comments (if necessary)
-# column 85(from row 3): reactor underfilled (from 0 to 2) (0 = not underfilled, 1 = underfilled (max. 20%), 2 = underfilled (more than 20%))
-# column 86(from row 3): solution in reactor has changed color in comparison to beginning of Experiment (0,1,2,3) (0 = no color change, 1 = decolorized, 2 = slight color change, 3 = strong color change)
-# column 87(from row 3): solution in reactor is cloudy (0,1 --> False or True)
-# column 88(from row 3): precipitate in reactor (0,1 --> False or True)
-# columnn 89(from row 3): "hood" on top of reactor (phase separation) (0,1 --> False or True)
-# column 90(from row 3): content of reactor gelated (bulk, not hood or precipiate) (0,1,2 --> 0 = no, 1 = slightly/partly, 2 = fully))
-# column 91(from row 3): use data for AI (0,1 --> False or True) (if empty, the decision should be made by this programme)
-
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+for t=1h
+column 16(from row 3): Mn from SEC (g/mol)
+column 17(from row 3): Mw from SEC (g/mol)
+column 18(from row 3): PDI from SEC (without unit)
+column 19(from row 3): severe tailing or fronting (True or False)
+column 20(from row 3): second distribution or multiple peaks(True or False)
+column 21(from row 3): peak smears into solvent or monomer peak (true or false))
+column 22(from row 3): drop below zero occurred (true or false)(if no data is available,
+ then the data was evaluated by hand)))
+column 23(from row 3): double check was necessary (True or False) (if no data is available,
+ then the data was evaluated by hand))
+column 24(from row 3): Integral of the Peak assigned with the peakrange before
+ (standard substance signal set to integral of 3 (anisole) or 6 (trioxane)))
+column 25(from row 3):NMR determined Yield
 
 
-######################################################
+until t=15h (only NMR for t = 6h and t = 10h, no SEC)
+column 82(from row 3): date of experiment
+column 83(from row 3): name of used reactor combination (reflux, reactor assembly, control unit)
+colum 84(from row 3): comments (if necessary)
+column 85(from row 3): reactor underfilled (from 0 to 2) (0 = not underfilled, 1 = underfilled
+ (max. 20%), 2 = underfilled (more than 20%))
+column 86(from row 3): solution in reactor has changed color in comparison to beginning of Experiment
+ (0,1,2,3) (0 = no color change, 1 = de-colorized, 2 = slight color change, 3 = strong color change)
+column 87(from row 3): solution in reactor is cloudy (0,1 --> False or True)
+column 88(from row 3): precipitate in reactor (0,1 --> False or True)
+# column 89(from row 3): "hood" on top of reactor (phase separation) (0,1 --> False or True)
+column 90(from row 3): content of reactor gelated (bulk, not hood or precipitate)
+ (0,1,2 --> 0 = no, 1 = slightly/partly, 2 = fully))
+column 91(from row 3): use data for AI (0,1 --> False or True)
+ (if empty, the decision should be made by this programme)
 
-# Start of the program
+"""
 
-######################################################
-
-
-# 1. Import of necessary packages
+# 1. Import statements
 
 import numpy as np
 import pandas as pd
 import re
 import os
+import itertools
 
 #######################################################
 
@@ -83,9 +89,11 @@ df.dropna(inplace=True, how="all")  # drop all completely empty rows
 df = df.drop(df.columns[0], axis=1)  # drop first column (legend in the excel file)
 df.reset_index(drop=True, inplace=True)  # reset index after row removing
 
-# 4.2. change header of dataframe to more readable names (recently in header only t0h, t1h, t2h, etc. or unnamed)-->(e.g., t0h-Mn)
+# 4.2. change header of dataframe to more readable names
+#  (recently in header only t0h, t1h, t2h, etc. or unnamed)-->(e.g., t0h-Mn)
 
-# 4.2.1. replace header (first row in original document contained only information about time of sampling) with the second row (information about the data in the column (without time of sampling)))
+# 4.2.1. replace header (first row in original document contained only information about time of sampling)
+#  with the second row (information about the data in the column (without time of sampling)))
 new_header = df.iloc[0]  # grab the first row for the header
 df = df[1:]  # remove header row from the dataframe
 df.columns = new_header  # set data from the initial first row as header
@@ -98,7 +106,8 @@ times_list_idx = 0
 
 # 4.2.2.1 iterate over all column names
 for col in df:
-    # If none of the keywords is found in the column name, change the column name and append it to the new column names list
+    # If none of the keywords is found in the column name, change the column name and append it to the new column
+    #  names list
     if not any(keyword in col for keyword in
                ['sample determiner', 'reactor', 'date', 'solution', 'data', 'comments', 'Standard', 'Peakrange']):
 
@@ -124,18 +133,22 @@ df.columns = new_col_names
 # solvent) but keep the first column (sample determiner) in the dataframe 4.3.1. drop all rows with empty first
 # column ('sample determiner')
 df = df.dropna(subset=[df.columns[0]], how='all')
-# 4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe (and drop the first column (sample determiner))
+# 4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe
+#  (and drop the first column (sample determiner))
 split_data = df['sample determiner'].str.split('-', expand=True)
 split_data.columns = ['Abbreviation', 'experiment number', 'experiment subnumber', 'experiment determiner', 'monomer',
                       'RAFT-Agent', 'solvent']
 df = pd.concat([split_data, df], axis=1, sort=False)
 
-# 4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number and experiment subnumber), move it to the first column and drop the columns (abbreviation, experiment number, experiment subnumber)
+# 4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number
+#  and experiment sub number), move it to the first column and drop the columns (abbreviation, experiment number,
+#   experiment sub number)
 df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
 df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
 df = df.drop(columns=['Abbreviation', 'experiment number', 'experiment subnumber'])
 
-# 4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent and solvent)
+# 4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent
+#  and solvent)
 df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
 
 # 4.4. remove all trailing spaces from the column names
@@ -154,11 +167,11 @@ df.replace('n/a', np.nan, inplace=True)
 
 # 5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
 discarded_df = df[df['use data for AI'] == 0].copy()
-# Create a new column 'criterium' with a default value in discarded_df
-discarded_df['discarding criterium'] = None
+# Create a new column 'criterion' with a default value in discarded_df
+discarded_df['discarding criterion'] = None
 discarded_df = discarded_df.reset_index(drop=True)
 # Fill the 'criteria' column where 'use data for AI' is 0
-discarded_df.loc[discarded_df['use data for AI'] == 0, 'discarding criterium'] = 'use-data-for-AI=0'
+discarded_df.loc[discarded_df['use data for AI'] == 0, 'discarding criterion'] = 'use-data-for-AI=0'
 # Drop all rows where 'use data for AI' is 0 from original dataframe
 df.drop(df[df['use data for AI'] == 0].index, inplace=True)
 # reset the index of the original dataframe
@@ -166,22 +179,23 @@ df = df.reset_index(drop=True)
 
 # ToDo: We decided to throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
 #   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
-# 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel file as discarded samples
-    # 5.2.2 and 5.2.3 do the same with Precipitation and gelation/phaseseperation in the reactor
+# 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel
+#  file as discarded samples
+#   5.2.2 and 5.2.3 do the same with Precipitation and gelation/phase separation in the reactor
 criteria_and_threshold = {"reactor is underfilled after polymerization?": 1.1,
                           "Precipitate in reactor?": 0.001,
                           "hood on top of reactor? (phase separation)": 0.001}
 abbreviation_criteria = {"reactor is underfilled after polymerization?": "underfilled",
-                          "Precipitate in reactor?": "precipitate",
-                          "hood on top of reactor? (phase separation)": "phase separation"}
+                         "Precipitate in reactor?": "precipitate",
+                         "hood on top of reactor? (phase separation)": "phase separation"}
 
 for criteria, threshold in zip(criteria_and_threshold.keys(), criteria_and_threshold.values()):
     _temp_df = df[df[criteria] >= threshold].copy()
-    # Create a new column 'criterium' with a default value in discarded_df
-    _temp_df['discarding criterium'] = None
+    # Create a new column 'criterion' with a default value in discarded_df
+    _temp_df['discarding criterion'] = None
     _temp_df = _temp_df.reset_index(drop=True)
     # Fill the 'criteria' column where 'reactor is underfilled after polymerization?' is >= 1
-    _temp_df.loc[_temp_df[criteria] >= threshold, 'discarding criterium'] = abbreviation_criteria[criteria]
+    _temp_df.loc[_temp_df[criteria] >= threshold, 'discarding criterion'] = abbreviation_criteria[criteria]
     new_df = pd.concat([discarded_df, _temp_df])
     discarded_df = new_df
     discarded_df.reset_index(drop=True)
@@ -226,7 +240,8 @@ for column_name in filtered_columns_molar_mass:
             df[column_name] = df[column_name].replace(value, np.nan)            
 '''
 
-# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous timepoint by at least 10% (Method inaccuracy)
+# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous
+#  timepoint by at least 10% (Method inaccuracy)
 # 5.3.4.1. remove negative conversions (< -5%)
 filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
 for column_name in filtered_columns_conversion:
@@ -236,8 +251,9 @@ for column_name in filtered_columns_conversion:
         if float(value) < -0.05:
             df[column_name] = df[column_name].replace(value, np.nan)
 
-            # 5.3.4.2. check if conversion is negative in comparison to previous timepoint by at least 10% (Method inaccuracy)
-            # Define the threshold for the 10% decrease for consecutive time points --> more than 10% decrease in comparison to previous timepoint would lead to NaN
+            # 5.3.4.2. check if conversion is negative in comparison to previous time point by at least 10% (Method
+            # inaccuracy) Define the threshold for the 10% decrease for consecutive time points --> more than 10%
+            # decrease in comparison to previous time point would lead to NaN
 threshold = 0.1
 rows_to_remove = []  # list of rows which should be removed
 
@@ -253,51 +269,54 @@ for i in range(1, len(df)):
             print(f'Warning: Value at row {i} and column {current_column} or {previous_column} is not a float')
 
         # if the previous value is NaN, check the value from before the previous value
-        def check_decreasing_conversion(value, col_index):
-            if np.isnan(value):
+        def check_decreasing_conversion(_value, col_index):
+            if np.isnan(_value):
                 return False
             previous_col = filtered_columns_conversion[col_index - 1]
             previous_val = df.at[i, previous_col]
             if np.isnan(previous_val):
                 if col_index == 1:
                     return False
-                return check_decreasing_conversion(value, col_index - 1)
-            return value < (previous_val - threshold)
+                return check_decreasing_conversion(_value, col_index - 1)
+            return _value < (previous_val - threshold)
+
 
         if check_decreasing_conversion(current_value, col):
             # df.at[i, current_column] = np.nan
-            # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should be thrown out.
+            # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should
+            # be thrown out.
             rows_to_remove.append(i)
 
 # remove rows with conversion below 0
 for idx, row in df.iterrows():
     row_values = [row[filtered_col_conv] for filtered_col_conv in filtered_columns_conversion]
     if np.average(row_values) < 0.01:
-        if not idx in rows_to_remove:
+        if idx not in rows_to_remove:
             rows_to_remove.append(idx)
 
             # 5.3.4.3. Remove the rows from df and add them to discarded_df
 discarded_df3 = df.loc[rows_to_remove].copy()
-# Create a new column 'criterium' with a default value in discarded_df
-discarded_df3['discarding criterium'] = None
+# Create a new column 'criterion' with a default value in discarded_df
+discarded_df3['discarding criterion'] = None
 discarded_df3 = discarded_df3.reset_index(drop=True)
 discarded_df3.loc[discarded_df3[
-                      'discarding criterium'].isna(), 'discarding criterium'] =\
+                      'discarding criterion'].isna(), 'discarding criterion'] = \
     f'Decreasing conversion within kinetic more than {threshold} from one time point to the next time point'
 new_df = pd.concat([discarded_df, discarded_df3])
 discarded_df = new_df
 # drop all rows from df which should be removed
 df = df.drop(rows_to_remove)
 
-            # 5.3.4.4. Reset the indices of the dataframes
+# 5.3.4.4. Reset the indices of the dataframes
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
 
-# 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data points(conversions)
+# 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data
+# points (conversions)
 REMOVER_DECIDER = 4  # number of data points which are necessary to keep the data set
 rows_to_remove = []  # list of rows which should be removed
 
-    # 5.3.5.1. iterate through the rows
+# 5.3.5.1. iterate through the rows
 for index, row in df.iterrows():
     is_complete_SEC = 0
     is_complete_NMR = 0
@@ -332,12 +351,14 @@ for index, row in df.iterrows():
 
         # 5.3.5.3. Remove the rows from df and add them to discarded_df
 discarded_df4 = df.loc[rows_to_remove].copy()
-# Create a new column 'criterium' with a default value in discarded_df
-discarded_df4['discarding criterium'] = None
+# Create a new column 'criterion' with a default value in discarded_df
+discarded_df4['discarding criterion'] = None
 discarded_df4 = discarded_df4.reset_index(drop=True)
-# Fill the 'discarding criterium' column with new text, where the number of complete data points is smaller than the REMOVER_DECIDER
+# Fill the 'discarding criterion' column with new text, where the number of complete data points is smaller than the
+# REMOVER_DECIDER
 discarded_df4.loc[discarded_df4[
-                      'discarding criterium'].isna(), 'discarding criterium'] = f'less than {REMOVER_DECIDER} full data points in data set'
+                      'discarding criterion'].isna(),
+                  'discarding criterion'] = f'less than {REMOVER_DECIDER} full data points in data set'
 new_df = pd.concat([discarded_df, discarded_df4])
 discarded_df = new_df
 # drop all rows from df which should be removed
@@ -350,10 +371,8 @@ discarded_df = discarded_df.reset_index(drop=True)
 ###################################################################
 
 # 6. check which data is still missing to have performed at least each experiment once
-import itertools
-
 # 6.1. Define the options for the three variables in the experiment
-RAFTagent_options = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+RAFT_agent_options = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 monomer_options = ['1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
 solvent_options = ['DMF', 'DMSO', 'Tol']
 
@@ -361,10 +380,10 @@ solvent_options = ['DMF', 'DMSO', 'Tol']
 permutations = []
 
 # 6.3. Generate permutations for the options
-for RAFTagent_options, monomer_options, solvent_options in itertools.product(RAFTagent_options, monomer_options,
-                                                                             solvent_options):
+for RAFT_agent_options, monomer_options, solvent_options in itertools.product(RAFT_agent_options, monomer_options,
+                                                                              solvent_options):
     # Build the new string with the chosen options
-    new_string = f'{monomer_options}-{RAFTagent_options}-{solvent_options}'
+    new_string = f'{monomer_options}-{RAFT_agent_options}-{solvent_options}'
     permutations.append(new_string)
 
     # 6.4. Create a dataframe from the list of permutations
@@ -372,15 +391,16 @@ permutations_df = pd.DataFrame(permutations, columns=['Missing experiments deter
 
 # 6.5. Compare the permutations dataframe with the curated dataframe from the excel file
 # 6.5.1. Check if the permutations are part of the existing dataframe
-#       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which experiments still need to be conducted
+#       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which
+#       experiments still need to be conducted
 permutations_df.drop(permutations_df[permutations_df['Missing experiments determiners'].isin(
     df['possible sample determiner-original'])].index, inplace=True)
 
 ###################################################################
 
 if __name__ == '__main__':
-    # 7. save the dataframe to excel file
-    # 7.1. # create an excel writer object
+    # 7. save the dataframe to Excel file
+    # 7.1. # create an Excel writer object
     with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
         # use to_excel function and specify the sheet_name and index
         # to store the dataframe in specified sheet
