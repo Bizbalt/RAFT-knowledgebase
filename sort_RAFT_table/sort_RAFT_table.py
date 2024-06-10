@@ -164,6 +164,9 @@ df.drop(df[df['use data for AI'] == 0].index, inplace=True)
 # reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
+# Todo: also remove "Precipitate in reactor?" != 0 AND "hood on top of reactor? (phase separation)" != 0 criteria
+# ToDo: We decided to throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
+#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
 # 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel file as discarded samples
 REACTOR_UNDERFILLED_DETERMINER = 1.1
 
