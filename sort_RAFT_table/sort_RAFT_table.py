@@ -152,7 +152,7 @@ df = df.drop(columns=['Abbreviation', 'experiment number', 'experiment subnumber
 df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
 
 # 4.4. remove all trailing spaces from the column names
-df.columns = df.columns.str.strip()
+df.columns = [x.strip() for x in df.columns]
 
 ###################################################################
 
@@ -177,8 +177,7 @@ df.drop(df[df['use data for AI'] == 0].index, inplace=True)
 # reset the index of the original dataframe
 df = df.reset_index(drop=True)
 
-# ToDo: We decided to throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
-#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
+
 # 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel
 #  file as discarded samples
 #   5.2.2 and 5.2.3 do the same with Precipitation and gelation/phase separation in the reactor
@@ -241,7 +240,7 @@ for column_name in filtered_columns_molar_mass:
 '''
 
 # 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous
-#  timepoint by at least 10% (Method inaccuracy)
+#  time points by at least 10% (Method inaccuracy)
 # 5.3.4.1. remove negative conversions (< -5%)
 filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
 for column_name in filtered_columns_conversion:
@@ -311,6 +310,19 @@ df = df.drop(rows_to_remove)
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
 
+# ToDo: We decided to also throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
+#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
+# 5.3.4b. Remove kinetics with decreasing Mn/Mw values
+for index, row in df.iterrows():
+    if index%10 == 0:
+        continue
+    kinetic_Mn_values = [row[time_point + "-Mn"] for time_point in times_list]
+    kinetic_Mw_values = [row[time_point + "-Mw"] for time_point in times_list]
+    kinetic_Mn_difference = [kinetic_Mn_values[i] - kinetic_Mn_values[i - 1] for i in range(1, len(kinetic_Mn_values))]
+    kinetic_Mw_difference = [kinetic_Mw_values[i] - kinetic_Mw_values[i - 1] for i in range(1, len(kinetic_Mw_values))]
+    print(kinetic_Mn_difference, kinetic_Mw_difference)
+
+exit("Exit for testing")
 # 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data
 # points (conversions)
 REMOVER_DECIDER = 4  # number of data points which are necessary to keep the data set
@@ -396,6 +408,8 @@ permutations_df.drop(permutations_df[permutations_df['Missing experiments determ
     df['possible sample determiner-original'])].index, inplace=True)
 
 ###################################################################
+
+# ToDO: try to sort discarded kinetics per severity for fun mode
 
 if __name__ == '__main__':
     # 7. save the dataframe to Excel file
