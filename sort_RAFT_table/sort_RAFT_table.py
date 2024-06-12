@@ -71,12 +71,13 @@ import pandas as pd
 import re
 import os
 import itertools
+from datetime import datetime
 
 #######################################################
 
 # 2. Definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "2023_07_07 - evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = os.path.join(os.getcwd(), "2023_07_07 - evaluation table (NMR and SEC)_curated.xlsx")
+OUTPUT_FILE_PATH = os.path.join(os.getcwd(), str(datetime.today().date()) + " - evaluation table (NMR and SEC)_curated.xlsx")
 
 # 3. read data from excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH)  # reads excel file to pandas dataframe
@@ -129,14 +130,14 @@ for col in df:
         # 4.2.2.2 Rename all columns with the new column names
 df.columns = new_col_names
 
-# 4.3. split first column (sample determiner) into 4 columns (experiment determiner, RAFT-Agent, monomer,
+# 4.3. split first column (sample determiner) into 4 columns (batch(prior experiment determiner), RAFT-Agent, monomer,
 # solvent) but keep the first column (sample determiner) in the dataframe 4.3.1. drop all rows with empty first
 # column ('sample determiner')
 df = df.dropna(subset=[df.columns[0]], how='all')
 # 4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe
 #  (and drop the first column (sample determiner))
 split_data = df['sample determiner'].str.split('-', expand=True)
-split_data.columns = ['Abbreviation', 'experiment number', 'experiment subnumber', 'experiment determiner', 'monomer',
+split_data.columns = ['Abbreviation', 'experiment number', 'experiment subnumber', 'batch', 'monomer',
                       'RAFT-Agent', 'solvent']
 df = pd.concat([split_data, df], axis=1, sort=False)
 
@@ -144,8 +145,11 @@ df = pd.concat([split_data, df], axis=1, sort=False)
 #  and experiment sub number), move it to the first column and drop the columns (abbreviation, experiment number,
 #   experiment sub number)
 df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
-df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]
+df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]  # reorder columns
 df = df.drop(columns=['Abbreviation', 'experiment number', 'experiment subnumber'])
+
+#  The experiment number is not a unique identifier and therefore obsolete
+df["Experiment number"] = range(1, len(df) + 1)
 
 # 4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent
 #  and solvent)
@@ -310,22 +314,9 @@ df = df.drop(rows_to_remove)
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
 
-# ToDo: We decided to also throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
-#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
-# 5.3.4b. Remove kinetics with decreasing Mn/Mw values
-for index, row in df.iterrows():
-    if index%10 == 0:
-        continue
-    kinetic_Mn_values = [row[time_point + "-Mn"] for time_point in times_list]
-    kinetic_Mw_values = [row[time_point + "-Mw"] for time_point in times_list]
-    kinetic_Mn_difference = [kinetic_Mn_values[i] - kinetic_Mn_values[i - 1] for i in range(1, len(kinetic_Mn_values))]
-    kinetic_Mw_difference = [kinetic_Mw_values[i] - kinetic_Mw_values[i - 1] for i in range(1, len(kinetic_Mw_values))]
-    print(kinetic_Mn_difference, kinetic_Mw_difference)
-
-exit("Exit for testing")
 # 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data
 # points (conversions)
-REMOVER_DECIDER = 4  # number of data points which are necessary to keep the data set
+REMOVER_DECIDER = 4  # number of data points which is necessary to keep the data set
 rows_to_remove = []  # list of rows which should be removed
 
 # 5.3.5.1. iterate through the rows
@@ -378,6 +369,65 @@ df = df.drop(rows_to_remove)
 # 5.3.5.4. Reset the indices of the dataframes
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
+
+# ToDo: We decided to also throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
+#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
+# 5.3.6. Remove kinetics with decreasing Mn/Mw values
+M_SEC_err = 100000 * 2 * 0.10  # the SEC measures up to  100000 g/mol.
+# The error for the SEC system of Mn/Mw is 10% so the range is twice
+rows_to_remove = []  # list of rows which should be removed
+
+Mw_Mn_get_out_dict = {}
+# after the method validation procedure for SEC we throw out all kinetics that are 2x10% lower than after the maximum has been reached
+for index, row in df.iterrows():
+    # If, over the course of time, the Mn/Mw values fall by more than two times their respective error
+    # (% error can be high for the higher point and low for the subsequent, sunken mass value, hence e.g. 2x6=12% distance)
+    # the whole kinetic should be discarded
+    kinetic_Mw_values = np.array([row[time_point + "-Mw"] for time_point in times_list])
+    kinetic_Mw_values = kinetic_Mw_values[~np.isnan(kinetic_Mw_values)]
+    highest_M_on_kinetic = kinetic_Mw_values[0]  # set max
+    for i in range(1, len(kinetic_Mw_values)):
+        # checking if the value is more than M_SEC_p_err lower than the previous one
+        curr_point = kinetic_Mw_values[i]
+        prev_point = kinetic_Mw_values[i - 1]
+        if curr_point > highest_M_on_kinetic:  # do comparison only after a drop
+            highest_M_on_kinetic = curr_point
+
+        elif curr_point < highest_M_on_kinetic - M_SEC_err:
+            Mw_Mn_get_out_dict[index] = "removed due to Mw sinking more than 2x10% after the maximum has been reached"
+            rows_to_remove.append(index)
+            break
+
+    kinetic_Mn_values = np.array([row[time_point + "-Mn"] for time_point in times_list])
+    kinetic_Mn_values = kinetic_Mn_values[~np.isnan(kinetic_Mn_values)]
+    highest_M_on_kinetic = kinetic_Mn_values[0]
+    for i in range(1, len(kinetic_Mn_values)):
+        curr_point = kinetic_Mn_values[i]
+        prev_point = kinetic_Mn_values[i - 1]
+        if curr_point > highest_M_on_kinetic:  # do comparison only after a drop
+            highest_M_on_kinetic = curr_point
+
+        elif curr_point < highest_M_on_kinetic - M_SEC_err:
+            rows_to_remove.append(index)
+            if index in Mw_Mn_get_out_dict.keys():
+                Mw_Mn_get_out_dict[index] = "removed due to Mw and Mn sinking sinking more than 2x10% after the maximum has been reached"
+            else:
+                Mw_Mn_get_out_dict[index] = "removed due to Mn sinking more than 2x10% after the maximum has been reached"
+                rows_to_remove.append(index)
+            break
+
+#  exclude rows from df and add them to discarded_df
+discarded_df5 = df.loc[rows_to_remove].copy()
+discarded_df5["discarding criterion"] = None
+for index in Mw_Mn_get_out_dict.keys():
+    discarded_df5.loc[index, "discarding criterion"] = Mw_Mn_get_out_dict[index]
+discarded_df5.reset_index(drop=True, inplace=True)
+
+discarded_df = pd.concat([discarded_df, discarded_df5])
+discarded_df.reset_index(drop=True, inplace=True)
+
+df.drop(rows_to_remove, inplace=True)
+df.reset_index(drop=True, inplace=True)
 
 ###################################################################
 
