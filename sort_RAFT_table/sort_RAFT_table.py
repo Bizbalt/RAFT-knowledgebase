@@ -370,8 +370,6 @@ df = df.drop(rows_to_remove)
 df = df.reset_index(drop=True)
 discarded_df = discarded_df.reset_index(drop=True)
 
-# ToDo: We decided to also throw out all the "falling" Mn/Mw. It needs to be checked for Mn/Mw that start high and then fall
-#   for more than a certain threshold. Usually they appear at a mean of the Mn values > 0.45*10**5 (45000 g/mol)
 # 5.3.6. Remove kinetics with decreasing Mn/Mw values
 M_SEC_err = 100000 * 2 * 0.10  # the SEC measures up to  100000 g/mol.
 # The error for the SEC system of Mn/Mw is 10% so the range is twice
