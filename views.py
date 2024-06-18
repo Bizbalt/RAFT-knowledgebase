@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, jsonify, send_from_directory, redirect, request, session
+from RAFT_knowledgebase import KnowledgeBase
 
 views = Blueprint(__name__, "views")
 
+kb = KnowledgeBase()
 user = {"username": "abc", "password": "123"}
 
 
@@ -12,7 +14,7 @@ def home():
 
 @views.route("/raft_knowledge_base")
 def intro_page():
-    return render_template("raft_knowledge_base.html")
+    return render_template("raft_knowledge_base.html", figure=kb.plot_exp(["241", "145", "343"], True, True).to_html(full_html=False))
 
 
 @views.route("/", methods=["POST", "GET"])
@@ -27,3 +29,5 @@ def login():
         return "<h1>Wrong username or password</h1>"
 
     return render_template("login.html")
+
+
