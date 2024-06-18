@@ -220,14 +220,14 @@ regex_conversion = r't\d+h-conversion'
 filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
 # Iterate over the matched columns and rows
 for column_name in filtered_columns_molar_mass:
-    for i in range(len(df)):
-        value = df[column_name][i]
+    for index in df.index:
+        value = df.loc[index, column_name]
         # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
         if isinstance(value, str) and re.search(r'ooc', value):
-            df[column_name] = df[column_name].replace(value, np.nan)
+            df.loc[index, column_name] = np.nan
             # Check if value is a float and larger than 100000, if so: replace with NaN
         elif float(value) > 100000:
-            df[column_name] = df[column_name].replace(value, np.nan)
+            df.loc[index, column_name] = np.nan
 
 ''' Activation maybe later (if necessary)
 
@@ -249,17 +249,33 @@ for column_name in filtered_columns_molar_mass:
 # 5.3.4.1. remove negative conversions (< -5%)
 filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
 for column_name in filtered_columns_conversion:
-    for i in range(len(df)):
-        value = df[column_name][i]
+    for index in df.index:
+        value = df.loc[index, column_name]
         # check if conversion is negative (larger than 5% negative)
         if float(value) < -0.05:
-            df[column_name] = df[column_name].replace(value, np.nan)
+            df.loc[index, column_name] = np.nan
 
             # 5.3.4.2. check if conversion is negative in comparison to previous time point by at least 10% (Method
             # inaccuracy) Define the threshold for the 10% decrease for consecutive time points --> more than 10%
             # decrease in comparison to previous time point would lead to NaN
 threshold = 0.1
 rows_to_remove = []  # list of rows which should be removed
+
+
+# if the previous value is NaN, check the value from before the previous value
+def check_decreasing_conversion(_value, col_index):
+    if np.isnan(_value):
+        return False
+    previous_col = filtered_columns_conversion[col_index - 1]
+    previous_val = df.at[i, previous_col]
+    if np.isnan(previous_val):
+        if col_index == 1:
+            return False
+        return check_decreasing_conversion(_value, col_index - 1)
+    # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should
+    # be thrown out.
+    return _value < (previous_val - threshold)
+
 
 # Iterate through the rows and perform the comparisons
 for i in range(1, len(df)):
@@ -269,26 +285,8 @@ for i in range(1, len(df)):
         current_value = df.at[i, current_column]
         previous_value = df.at[i, previous_column]
         # check if both values for comparison are floats, then compare them
-        if not isinstance(current_value, float) and isinstance(previous_value, float):
-            print(f'Warning: Value at row {i} and column {current_column} or {previous_column} is not a float')
-
-        # if the previous value is NaN, check the value from before the previous value
-        def check_decreasing_conversion(_value, col_index):
-            if np.isnan(_value):
-                return False
-            previous_col = filtered_columns_conversion[col_index - 1]
-            previous_val = df.at[i, previous_col]
-            if np.isnan(previous_val):
-                if col_index == 1:
-                    return False
-                return check_decreasing_conversion(_value, col_index - 1)
-            return _value < (previous_val - threshold)
-
 
         if check_decreasing_conversion(current_value, col):
-            # df.at[i, current_column] = np.nan
-            # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should
-            # be thrown out.
             rows_to_remove.append(i)
 
 # remove rows with conversion below 0
