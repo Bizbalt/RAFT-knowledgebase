@@ -177,7 +177,10 @@ def fit_and_exclude_outliers(x, y, fit_func, p0, bounds, nan_policy="omit", iter
     return result
 
 
-kinetics_df = pd.DataFrame()  # create new dataframe with kinetics per row
+kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'monomer',
+       'RAFT-Agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
+       'p1_p2_covariance', 'p2_variance', 'squared_error', 'conv_time_data',
+       'Mn_time_data', 'Mw_time_data'])  # create new dataframe with kinetics per row
 for idx, kinetic_curve in enumerate(kinetic_curves):
     # first make sure the datapoints are in the right format and not sometimes int sometimes float
     xdata = np.array(kinetic_curve["time"].values, dtype=float)
@@ -213,16 +216,14 @@ for idx, kinetic_curve in enumerate(kinetic_curves):
     Mw_time_data = np.array([ng_fit_Mw["x"], ng_fit_Mw["y"]])
     squared_error_Mw = ng_fit_Mw["sq_err"]
 
-    new_row = pd.DataFrame({"exp_nr": kinetic_curve["exp_nr"].iloc[1], "max_con": max(ydata_conv),
-                            "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
-                            "monomer": kinetic_curve["monomer"].iloc[1],
-                            "RAFT-Agent": kinetic_curve["RAFT-Agent"].iloc[1],
-                            "solvent": kinetic_curve["solvent"].iloc[1],
-                            "fit_p1": [popt[0]], "fit_p2": [popt[1]],
-                            "p1_variance": [pcov[0][0]], "p1_p2_covariance": [pcov[0][1]], "p2_variance": [pcov[1][1]],
-                            "squared_error": squared_error, "conv_time_data": [conv_time_data],
-                            "Mn_time_data": [Mn_time_data], "Mw_time_data": [Mw_time_data]})
-    kinetics_df = pd.concat([kinetics_df, new_row])
+    kinetics_df.loc[idx] = {"exp_nr":kinetic_curve["exp_nr"].iloc[1], "max_con":max(ydata_conv),
+                        "theo_max_con":"yet to calc", "theo_react_end":"yet to calc",
+                            "monomer":kinetic_curve["monomer"].iloc[1], "RAFT-Agent":kinetic_curve["RAFT-Agent"].iloc[1],
+                            "solvent":kinetic_curve["solvent"].iloc[1],
+                            "fit_p1":popt[0],"fit_p2":popt[1],
+                            "p1_variance":pcov[0][0],"p1_p2_covariance":pcov[0][1],"p2_variance":pcov[1][1],
+                            "squared_error":squared_error, "conv_time_data":conv_time_data,
+                            "Mn_time_data":Mn_time_data, "Mw_time_data":Mw_time_data}
 
 kinetics_df.reset_index(drop=True, inplace=True)
 kinetics_df.drop(axis="index", index=kinetics_df[kinetics_df["max_con"] <= 0].index, inplace=True)
@@ -405,6 +406,4 @@ def refine_search(dataframe: pd.DataFrame, monomer: str | list = None, solvent: 
         search_q_raft_agent = dataframe["RAFT-Agent"].apply(lambda x: x in [*raft_agent])
     return dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent]
 
-
-print(kinetics_df["monomer"].unique())
 
