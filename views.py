@@ -4,7 +4,6 @@ from RAFT_knowledgebase import KnowledgeBase
 views = Blueprint(__name__, "views")
 
 kb = KnowledgeBase()
-user = {"username": "abc", "password": "123"}
 
 
 @views.route("/")
@@ -14,20 +13,12 @@ def home():
 
 @views.route("/raft_knowledge_base")
 def intro_page():
-    return render_template("raft_knowledge_base.html", figure=kb.plot_exp(["241", "145", "343"], True, True).to_html(full_html=False))
+    return render_template("raft_knowledge_base.html")
 
 
-@views.route("/", methods=["POST", "GET"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        if username == user["username"] and password == user["password"]:
-            session["user"] = username
-            return redirect("/New_temp")
-
-        return "<h1>Wrong username or password</h1>"
-
-    return render_template("login.html")
+@views.route("/test_site")
+def test_site():
+    return render_template(
+        "test_site.html", figure=kb.plot_exp(["241", "145", "343"], True, True).to_html(full_html=False))
 
 

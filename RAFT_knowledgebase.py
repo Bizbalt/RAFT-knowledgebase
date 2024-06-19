@@ -34,6 +34,20 @@ class KnowledgeBase:
     def __init__(self):
         self.kinetics_df = format_database_to_kinetics_df()
         self.colors = px.colors.qualitative.Plotly  # set up a simple color palette
+        self.dropdown_options = self.get_dropdown_options()
+
+    def get_dropdown_options(self) -> dict:
+        """ Get the dropdown options for the search form
+        Returns
+            -------
+            dict
+                A dictionary containing the dropdown options for the search form
+        """
+        return {
+            "monomer": self.kinetics_df["monomer"].unique(),
+            "solvent": self.kinetics_df["solvent"].unique(),
+            "RAFT-Agent": self.kinetics_df["RAFT-Agent"].unique()
+        }
 
     def search_for_exp(self, exp_nr: str | list) -> pd.DataFrame:
         """ Search for the experimental and descriptive info of the given experiment number(s)
