@@ -16,6 +16,11 @@ def intro_page():
     return render_template("raft_knowledge_base.html")
 
 
+@views.route("/get_dropdown_options")
+def get_dropdown_options():
+    return jsonify(kb.dropdown_options)
+
+
 @views.route("/test_site")
 def test_site():
     return render_template(

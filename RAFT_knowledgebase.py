@@ -44,9 +44,9 @@ class KnowledgeBase:
                 A dictionary containing the dropdown options for the search form
         """
         return {
-            "monomer": self.kinetics_df["monomer"].unique(),
-            "solvent": self.kinetics_df["solvent"].unique(),
-            "RAFT-Agent": self.kinetics_df["RAFT-Agent"].unique()
+            "monomer": self.kinetics_df["monomer"].unique().tolist(),
+            "solvent": self.kinetics_df["solvent"].unique().tolist(),
+            "RAFT-agent": self.kinetics_df["RAFT-Agent"].unique().tolist()
         }
 
     def search_for_exp(self, exp_nr: str | list) -> pd.DataFrame:
