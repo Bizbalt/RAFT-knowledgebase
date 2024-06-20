@@ -9,7 +9,32 @@
 </head>
 
 <body>
+    <a href="test_site">Goto test site</a>
     <h1>RAFT Knowledge Base</h1>
-    <label for="search"></label><input type="text" id="search" placeholder="Search..." onkeyup="">
+    <a href="https://www.google.com">Link to Paper</a> <a href="https://github.com/MichaelRingleb/sort_RAFT_table/tree/master">Link to Code repository</a>
+    <br>
+    <p style="font-size: large">
+        This knowledge base aims to inform about the underlying database of kinetics and how to access this intel. If you want to polymerize a certain monomer, choose it from the dropdown list and refine your search with the available options for RAFT Agent, solvent, etc. if you like.
+        If you want to achieve a specific mass, choose the one or multiple desired experiments and plot their kinetic plots by using the search bar to look for a certain molar mass-time-points.
+    </p>
+
+    <form name="search_experiments_form" id="search_experiments_form" action="/action_page.php">
+      Monomers: <select name="monomer" id="monomer">
+        <option value="" selected="selected">any</option>
+    </select>
+
+      RAFT-agents: <select name="RAFT-agent" id="RAFT-agent">
+        <option value="" selected="selected">any</option>
+    </select>
+
+      Solvents: <select name="solvent" id="solvent">
+        <option value="" selected="selected">any</option>
+    </select>
+
+    <input type="submit" value="Search">
+    </form>
+
+    <br>
+    <label for="search"></label><input type="text" id="search" placeholder="e.g. 42, 146, 148"> <button onclick="search_query()">Search</button>
     <div class="results"></div>
 </body>
