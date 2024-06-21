@@ -26,24 +26,6 @@ window.onload = function() {
 }
 
 
-
-// function to send a plot request to the server
-async function search_query() {
-
-    // get the info from all dropdown menus
-    const monomer = document.getElementById("monomer").value;
-    const RAFT_agent = document.getElementById("RAFT-agent").value;
-    const solvent = document.getElementById("solvent").value;
-
-    // catch any empty strings and exchange with "any"
-    const format = [monomer, RAFT_agent, solvent].map(x => x === "" ? "any" : x)
-    const search_string = format.join("/")
-    console.log(url + search_string)
-    const response = await fetch(url + 'search_query/${search_string}')
-
-}
-
-
 // function to send a plot request to the server
 async function plot_query() {
     let plot_query_input = document.getElementById("search").value;

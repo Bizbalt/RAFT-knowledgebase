@@ -169,7 +169,7 @@ def format_database_to_kinetics_df():
         kinetic_curves.append(kinetic_curve_entries)
 
     kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'monomer',
-                                        'RAFT-Agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
+                                        'RAFT-agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
                                         'p1_p2_covariance', 'p2_variance', 'squared_error', 'conv_time_data',
                                         'Mn_time_data', 'Mw_time_data'])  # create new dataframe with kinetics per row
 
@@ -211,7 +211,7 @@ def format_database_to_kinetics_df():
         kinetics_df.loc[idx] = {"exp_nr": str(kinetic_curve["exp_nr"].iloc[1]), "max_con": max(ydata_conv),
                                 "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
                                 "monomer": kinetic_curve["monomer"].iloc[1],
-                                "RAFT-Agent": kinetic_curve["RAFT-Agent"].iloc[1],
+                                "RAFT-agent": kinetic_curve["RAFT-Agent"].iloc[1],
                                 "solvent": kinetic_curve["solvent"].iloc[1],
                                 "fit_p1": popt[0], "fit_p2": popt[1],
                                 "p1_variance": pcov[0][0], "p1_p2_covariance": pcov[0][1], "p2_variance": pcov[1][1],

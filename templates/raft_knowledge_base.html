@@ -18,7 +18,7 @@
         If you want to achieve a specific mass, choose the one or multiple desired experiments and plot their kinetic plots by using the search bar to look for a certain molar mass-time-points.
     </p>
 
-    <form name="search_experiments_form" id="search_experiments_form">
+    <form action="{{ url_for('views.search_query') }}" method="post">
       Monomers: <select name="monomer" id="monomer">
         <option value="" selected="selected">any</option>
     </select>
@@ -31,7 +31,7 @@
         <option value="" selected="selected">any</option>
     </select>
 
-    <input type="submit" value="Search" onclick="search_query()">
+    <input type="submit" value="Search">
     </form>
 
     <br>

@@ -21,6 +21,13 @@ def get_dropdown_options():
     return jsonify(kb.dropdown_options)
 
 
+@views.route("/search_query", methods=["POST"])
+def search_query():
+    query = dict(request.form)
+    search_result = kb.refine_search(monomer=query["monomer"], solvent=query["solvent"], raft_agent=query["RAFT-agent"])
+    return search_result.to_html()
+
+
 @views.route("/test_site")
 def test_site():
     return render_template(
