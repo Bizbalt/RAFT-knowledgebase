@@ -366,3 +366,6 @@ FodyWeavers.xsd
 
 # User-specific files
 /data/data exploration figures/
+
+# Jupyter Notebook checkpoints
+/.ipynb_checkpoints/dataset_analysis-checkpoint.ipynb
