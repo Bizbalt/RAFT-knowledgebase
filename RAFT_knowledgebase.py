@@ -46,7 +46,7 @@ class KnowledgeBase:
         return {
             "monomer": self.kinetics_df["monomer"].unique().tolist(),
             "solvent": self.kinetics_df["solvent"].unique().tolist(),
-            "RAFT-agent": self.kinetics_df["RAFT-agent"].unique().tolist()
+            "raft_agent": self.kinetics_df["RAFT-agent"].unique().tolist()
         }
 
     def search_for_exp(self, exp_nr: str | list) -> pd.DataFrame:
@@ -120,16 +120,19 @@ class KnowledgeBase:
         result_df = self.kinetics_df[search_q_monomer].sort_values(by=["score"], ascending=False)
         return result_df
 
-    def refine_search(self, dataframe: pd.DataFrame = None, monomer: str | list = None, solvent: str | list = None,
-                      raft_agent: str | list = None):
+    def refine_search(self, dataframe: pd.DataFrame = None, monomer: list = None, solvent: list = None,
+                      raft_agent: list = None):
         if dataframe is None:
             dataframe = self.kinetics_df
         len_df = len(dataframe)
         search_q_monomer, search_q_solvent, search_q_raft_agent = [np.array([True] * len_df) for _ in range(3)]
-        if monomer and not monomer == "":
+        if monomer and not monomer == [""]:
             search_q_monomer = dataframe["monomer"].apply(lambda x: x in [*monomer])
-        if solvent and not solvent == "":
+        if solvent and not solvent == [""]:
             search_q_solvent = dataframe["solvent"].apply(lambda x: x in [*solvent])
-        if raft_agent and not raft_agent == "":
+        if raft_agent and not raft_agent == [""]:
             search_q_raft_agent = dataframe["RAFT-agent"].apply(lambda x: x in [*raft_agent])
-        return dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent]
+
+        search_q = dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent]
+
+        return search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]]

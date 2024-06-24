@@ -7,11 +7,11 @@ async function options_innit() {
     const dropdown_options_dic = await response.json()
 
     const monomerSel = document.getElementById("monomer");
-    const RAFT_agentSel = document.getElementById("RAFT-agent");
+    const raft_agentSel = document.getElementById("raft_agent");
     const solventSel = document.getElementById("solvent");
 
-    const dropdownSelectors = {"monomer": monomerSel, "RAFT-agent": RAFT_agentSel, "solvent": solventSel}
-    const keys = ["monomer", "RAFT-agent", "solvent"]
+    const dropdownSelectors = {"monomer": monomerSel, "raft_agent": raft_agentSel, "solvent": solventSel}
+    const keys = ["monomer", "raft_agent", "solvent"]
 
     for (const dropdown of keys){
         const dropdownSel = dropdownSelectors[dropdown]
@@ -32,6 +32,6 @@ async function plot_query() {
     const response = await fetch(url + '/plot_query/${plot_query_input}')
 
     const results_div = document.getElementById("results");
-    results_dic.inner = response.text()
+    results_div.inner = response.text()
 
 }

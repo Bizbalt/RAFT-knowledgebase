@@ -14,28 +14,29 @@
     <a href="https://www.google.com">Link to Paper</a> <a href="https://github.com/MichaelRingleb/sort_RAFT_table/tree/master">Link to Code repository</a>
     <br>
     <p style="font-size: large">
-        This knowledge base aims to inform about the underlying database of kinetics and how to access this intel. If you want to polymerize a certain monomer, choose it from the dropdown list and refine your search with the available options for RAFT Agent, solvent, etc. if you like.
+        This knowledge base aims to inform about the underlying database of kinetics and how to access this intel. If you want to polymerize a certain monomer, choose it (or multiple with ctrl) from the dropdown list and refine your search with the available options for RAFT Agent, solvent, etc. if you like.
         If you want to achieve a specific mass, choose the one or multiple desired experiments and plot their kinetic plots by using the search bar to look for a certain molar mass-time-points.
     </p>
 
-    <form action="{{ url_for('views.search_query') }}" method="post">
-      Monomers: <select name="monomer" id="monomer">
+    <form action="" method="POST">
+      Monomers: <select name="monomer" id="monomer" multiple size="8">
         <option value="" selected="selected">any</option>
     </select>
 
-      RAFT-agents: <select name="RAFT-agent" id="RAFT-agent">
+      RAFT-agents: <select name="raft_agent" id="raft_agent" multiple size="8">
         <option value="" selected="selected">any</option>
     </select>
 
-      Solvents: <select name="solvent" id="solvent">
+      Solvents: <select name="solvent" id="solvent" multiple size="8">
         <option value="" selected="selected">any</option>
     </select>
 
     <input type="submit" value="Search">
     </form>
-
+    {{ prior_search }}
+    {{ dataframe | safe }}
     <br>
-    <label for="search"></label><input type="text" id="search" placeholder="e.g. 42, 146, 148">
-    <button onclick="plot_query()">Search</button>
+    <label for="search"></label><input type="text" id="search" placeholder="e.g. 42, 146, 148" autocomplete="experiment_search">
+    <button>Search</button>
     <div class="results"></div>
 </body>
