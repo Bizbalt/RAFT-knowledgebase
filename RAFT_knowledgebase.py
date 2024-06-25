@@ -66,7 +66,7 @@ class KnowledgeBase:
         else:
             return self.kinetics_df[self.kinetics_df['exp_nr'].isin(exp_nr)]
 
-    def plot_exp(self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves: tuple = (True, True)):
+    def plot_exp(self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves: list = [True, True]):
         """ Plot the kinetic curves for the experiment number(s) exp_nr.
         Parameters
             ----------

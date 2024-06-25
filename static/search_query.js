@@ -27,11 +27,19 @@ window.onload = function() {
 
 
 // function to send a plot request to the server
-async function plot_query() {
-    let plot_query_input = document.getElementById("search").value;
-    const response = await fetch(url + '/plot_query/${plot_query_input}')
-
-    const results_div = document.getElementById("results");
+async function plot_exp() {
+    let experiment_list = document.getElementById("search").value;
+    // create a list of the experiments numbers as strings
+    let experiments_list = experiment_list.split(",").map(x => x.trim()).join(",")
+    let plot_mn = null
+    let plot_mw = null
+    let fit_curves = null
+    const response = await fetch(url + `plot_exp`, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ exp_nr: experiments_list, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves })
+        })
+    const results_div = document.getElementById("results_div");
     results_div.inner = response.text()
 
 }

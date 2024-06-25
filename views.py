@@ -32,3 +32,11 @@ def get_dropdown_options():
 def test_site():
     return render_template(
         "test_site.html", figure=kb.plot_exp(["241", "145", "343"], True, True).to_html(full_html=False))
+
+
+@views.route("/plot_exp", methods=["POST"])
+def plot_exp():
+    # create dictionary from json object
+    exp_nr_n_settings = request.json
+    print("test", exp_nr_n_settings,  sep="\n")
+    return kb.plot_exp(**exp_nr_n_settings)
