@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import re
 from scipy.optimize import curve_fit
-import sort_RAFT_table as sRt
+import pickle
+import os
 
 
 def change_time_format_h(time_format):
@@ -75,6 +76,23 @@ def normalize_errors(err):
 
 
 def format_database_to_kinetics_df():
+    pickle_path = os.path.join("data", "kinetics_data", "kinetics_df.pkl")
+
+    # reload data from pickle if it is the newest between all files leading to its generation
+    if os.path.exists(pickle_path):
+        kinetics_df_time = os.path.getmtime(pickle_path)
+
+        # get the prior files' modification times
+        # these are this file and the sort_RAFT_table.py file
+        this_file_time = os.path.getmtime(__file__)
+        sort_raft_table_time = os.path.getmtime("sort_RAFT_table.py")
+        # check if the pickle file is the newest
+        if kinetics_df_time > this_file_time and kinetics_df_time > sort_raft_table_time:
+            with open(pickle_path, "rb") as f:
+                kinetics_df = pickle.load(f)
+            return kinetics_df
+
+    import sort_RAFT_table as sRt
     # rectifying datatable(s)
     sRt.df["t6h-conversion"] = np.nan
     sRt.df["t10h-conversion"] = np.nan
@@ -196,17 +214,13 @@ def format_database_to_kinetics_df():
         ng_fit_Mn = fit_and_exclude_outliers(x=xdata, y=ydata_Mn, fit_func=neg_growth_abscissae, p0=p_initial,
                                              bounds=([0, -np.inf, -np.inf], [1, np.inf, np.inf]))
 
-        popt_Mn, pcov_Mn = ng_fit_Mn["p_opt"], ng_fit_Mn["p_cov"]
         Mn_time_data = np.array([ng_fit_Mn["x"], ng_fit_Mn["y"]])
-        squared_error_Mn = ng_fit_Mn["sq_err"]
 
         # fitting section for Mw
         ng_fit_Mw = fit_and_exclude_outliers(x=xdata, y=ydata_Mw, fit_func=neg_growth_abscissae, p0=p_initial,
                                              bounds=([0, -np.inf, -np.inf], [1, np.inf, np.inf]))
 
-        popt_Mw, pcov_Mw = ng_fit_Mw["p_opt"], ng_fit_Mw["p_cov"]
         Mw_time_data = np.array([ng_fit_Mw["x"], ng_fit_Mw["y"]])
-        squared_error_Mw = ng_fit_Mw["sq_err"]
 
         kinetics_df.loc[idx] = {"exp_nr": str(kinetic_curve["exp_nr"].iloc[1]), "max_con": max(ydata_conv),
                                 "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
@@ -285,5 +299,8 @@ def format_database_to_kinetics_df():
         score.append(((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 72) ** 2 + 1) * 0.8 + (
                 (12 - row.error_score) / 12) * 0.5))
     kinetics_df["score"] = score
+
+    # pickle dataframe for reload on same day and overwrite prior file
+    kinetics_df.to_pickle(pickle_path)
 
     return kinetics_df
