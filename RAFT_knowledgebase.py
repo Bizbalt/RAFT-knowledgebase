@@ -61,12 +61,12 @@ class KnowledgeBase:
             DataFrame
                 The DataFrame containing the experimental and descriptive info of the given experiment number(s)
         """
-        if type(exp_nr) == str:
+        if exp_nr is str:
             return self.kinetics_df[self.kinetics_df['exp_nr'] == exp_nr]
         else:
             return self.kinetics_df[self.kinetics_df['exp_nr'].isin(exp_nr)]
 
-    def plot_exp(self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves: list = [True, True]):
+    def plot_exp(self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves=None):
         """ Plot the kinetic curves for the experiment number(s) exp_nr.
         Parameters
             ----------
@@ -85,13 +85,15 @@ class KnowledgeBase:
             Figure
 
         """
+        if fit_curves is None:
+            fit_curves = [True, True]
         plot_data = self.search_for_exp(exp_nr)
         exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}")
         for kinetic_to_plot in plot_data.itertuples():
             x_data, ydata = kinetic_to_plot.conv_time_data
             marker_dict = dict(color=self.colors[int(kinetic_to_plot.Index) % len(self.colors)])
-            exp_fig.add_scatter(x=x_data, y=ydata, mode="lines+markers", name=kinetic_to_plot.exp_nr, marker=marker_dict,
-                                legendgroup=str(kinetic_to_plot.exp_nr))
+            exp_fig.add_scatter(x=x_data, y=ydata, mode="lines+markers", name=kinetic_to_plot.exp_nr,
+                                marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
             if fit_curves[0]:
                 if fit_curves[1]:
                     add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
