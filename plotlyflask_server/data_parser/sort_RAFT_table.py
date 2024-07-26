@@ -74,10 +74,10 @@ import itertools
 from datetime import datetime
 
 #######################################################
-
+print(os.getcwd())
 # 2. Definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "data/kinetics_data/2023_07_07 - evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = os.path.join(os.getcwd(), "data/kinetics_data",
+OUTPUT_FILE_PATH = os.path.join("data/kinetics_data",
                                 str(datetime.today().date()) + " - evaluation table (NMR and SEC)_curated.xlsx")
 
 # 3. read data from excel file to pd dataframe

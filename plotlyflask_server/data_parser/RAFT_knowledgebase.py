@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from reformat_database import format_database_to_kinetics_df, neg_growth, neg_growth_derivative
+from .reformat_database import format_database_to_kinetics_df, neg_growth, neg_growth_derivative
 
 """ Functions for website-interaction-elements """
 

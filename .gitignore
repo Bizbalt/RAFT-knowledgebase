@@ -366,7 +366,8 @@ FodyWeavers.xsd
 
 # User-specific files
 /data/data exploration figures/
-/data/kinetics_data/kinetics_df.pkl
+/plotlyflask_server/data_parser/kinetics_data/kinetics_df.pkl
 
 # Jupyter Notebook checkpoints
 /.ipynb_checkpoints/dataset_analysis-checkpoint.ipynb
+/sort_RAFT_table.pyproj

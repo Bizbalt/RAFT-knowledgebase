@@ -76,7 +76,7 @@ def normalize_errors(err):
 
 
 def format_database_to_kinetics_df():
-    pickle_path = os.path.join("data", "kinetics_data", "kinetics_df.pkl")
+    pickle_path = os.path.join("data/kinetics_data", "kinetics_df.pkl")
 
     # reload data from pickle if it is the newest between all files leading to its generation
     if os.path.exists(pickle_path):
@@ -84,15 +84,16 @@ def format_database_to_kinetics_df():
 
         # get the prior files' modification times
         # these are this file and the sort_RAFT_table.py file
-        this_file_time = os.path.getmtime(__file__)
-        sort_raft_table_time = os.path.getmtime("sort_RAFT_table.py")
+        parser_folder = os.path.join(os.getcwd(), "plotlyflask_server/data_parser")
+        this_file_time = os.path.getmtime(os.path.join(parser_folder, "reformat_database.py"))
+        sort_raft_table_time = os.path.getmtime(os.path.join(parser_folder, "sort_RAFT_table.py"))
         # check if the pickle file is the newest
         if kinetics_df_time > this_file_time and kinetics_df_time > sort_raft_table_time:
             with open(pickle_path, "rb") as f:
                 kinetics_df = pickle.load(f)
             return kinetics_df
 
-    import sort_RAFT_table as sRt
+    from . import sort_RAFT_table as sRt
     # rectifying datatable(s)
     sRt.df["t6h-conversion"] = np.nan
     sRt.df["t10h-conversion"] = np.nan
