@@ -2,7 +2,7 @@ const url = window.location.origin + "/"
 
 
 // building the dropdown menus
-async function options_innit() {
+async function options_init() {
     const response = await fetch(url + 'get_dropdown_options')
     const dropdown_options_dic = await response.json()
 
@@ -22,7 +22,7 @@ async function options_innit() {
 }
 
 window.onload = function() {
-  options_innit().then(r => console.log("Dropdowns initialized"))
+  options_init().then(r => console.log("Dropdowns initialized"))
 }
 
 
@@ -30,7 +30,7 @@ window.onload = function() {
 async function plot_exp() {
     let experiment_list = document.getElementById("search").value;
     // create a list of the experiments numbers as strings
-    let experiments_list = experiment_list.split(",").map(x => x.trim()).join(",")
+    let experiments_list = experiment_list.split(",").map(x => x.trim())
     let plot_mn = null
     let plot_mw = null
     let fit_curves = null
@@ -40,6 +40,9 @@ async function plot_exp() {
         body: JSON.stringify({ exp_nr: experiments_list, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves })
         })
     const results_div = document.getElementById("results_div");
-    results_div.inner = response.text()
+    const  content = await response.json()
+    console.log(content);
+    Plotly.newPlot( "results_div",content.data, content.layout);
+
 
 }
