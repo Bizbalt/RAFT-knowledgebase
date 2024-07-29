@@ -2,8 +2,6 @@ from flask import Flask
 
 
 # instantiate the app
-# ToDo: I love this post on how to embed Dash in Flask: https://hackersandslackers.com/plotly-dash-with-flask/
-
 def init_app():
     """Construct core Flask application."""
     app = Flask(__name__, instance_relative_config=False)
@@ -14,7 +12,7 @@ def init_app():
         from . import routes
 
         # Import Dash application
-        from .plotlydash.dashboard import create_dashboard
-        app = create_dashboard(app)
+        from .plotlydash.dashboard import init_dashboard
+        app = init_dashboard(app)
 
         return app

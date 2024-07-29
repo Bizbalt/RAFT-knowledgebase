@@ -371,3 +371,4 @@ FodyWeavers.xsd
 # Jupyter Notebook checkpoints
 /.ipynb_checkpoints/dataset_analysis-checkpoint.ipynb
 /sort_RAFT_table.pyproj
+/data/kinetics_data/kinetics_df.pkl
