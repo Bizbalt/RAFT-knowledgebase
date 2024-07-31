@@ -22,12 +22,23 @@ async function options_init() {
 }
 
 window.onload = function() {
-  options_init().then(r => console.log("Dropdowns initialized"))
-}
+    options_init().then(r => console.log("Dropdowns initialized"))
 
+    const input_field = document.getElementById("search");
+    input_field.addEventListener("keyup", ({key}) => {
+        if (key === "Enter") {
+            plot_exp().then(r => console.log("Plotting"))
+        }
+    })
+}
 
 // function to send a plot request to the server
 async function plot_exp() {
+    const results_div = document.getElementById("results_div");
+    while (results_div.firstChild) {
+        results_div.removeChild(results_div.firstChild);
+    }
+
     let experiment_list = document.getElementById("search").value;
     // create a list of the experiments numbers as strings
     let experiments_list = experiment_list.split(",").map(x => x.trim())
@@ -39,10 +50,14 @@ async function plot_exp() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ exp_nr: experiments_list, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves })
         })
-    const results_div = document.getElementById("results_div");
-    const  content = await response.json()
-    console.log(content);
-    Plotly.newPlot( "results_div",content.data, content.layout);
+
+    const loading_gif = document.createElement("img");
+    loading_gif.src = "static/loading_i_86x50.gif";
+    results_div.appendChild(loading_gif);
+
+    const content = await response.json()
+    loading_gif.remove();
+    Plotly.newPlot("results_div",content.data, content.layout);
 
 
 }

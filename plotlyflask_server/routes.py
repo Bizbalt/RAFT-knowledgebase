@@ -43,6 +43,4 @@ def test_site():
 def plot_exp():
     # create dictionary from json object
     exp_nr_n_settings = request.json
-
-    print("test", exp_nr_n_settings,  sep="\n")
     return kb.plot_exp(**exp_nr_n_settings).to_json()
