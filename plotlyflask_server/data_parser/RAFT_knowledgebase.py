@@ -66,7 +66,8 @@ class KnowledgeBase:
         else:
             return self.kinetics_df[self.kinetics_df['exp_nr'].isin(exp_nr)]
 
-    def plot_exp(self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves=None):
+    def plot_exp(
+            self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves=None, *args, **kwargs):
         """ Plot the kinetic curves for the experiment number(s) exp_nr.
         Parameters
             ----------
@@ -79,6 +80,8 @@ class KnowledgeBase:
             fit_curves
                 A tuple with two boolean values, the first one determines whether to plot the fit curves, the second one
                 determines whether to plot the derivative of the fit curves.
+            args and kwargs
+                Additional arguments and keyword arguments will be passed to the plotly express line function
 
             Returns
             -------
@@ -88,7 +91,7 @@ class KnowledgeBase:
         if fit_curves is None:
             fit_curves = [True, True]
         plot_data = self.search_for_exp(exp_nr)
-        exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}")
+        exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
         for kinetic_to_plot in plot_data.itertuples():
             x_data, ydata = kinetic_to_plot.conv_time_data
             marker_dict = dict(color=self.colors[int(kinetic_to_plot.Index) % len(self.colors)])

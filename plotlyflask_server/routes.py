@@ -43,4 +43,4 @@ def test_site():
 def plot_exp():
     # create dictionary from json object
     exp_nr_n_settings = request.json
-    return kb.plot_exp(**exp_nr_n_settings).to_json()
+    return kb.plot_exp(**exp_nr_n_settings, template=None).to_json()  # "plotly_dark"
