@@ -24,10 +24,7 @@ async function options_init() {
 async function table_reformat_init() {
     // search for the table in the results div
     const table = document.getElementById("results").getElementsByClassName("dataframe")[0];
-    table.className = "table table-striped table-bordered table-hover table-condensed";
-    // table table-sm table-hover
-
-
+    table.className = "table table-striped table-bordered table-hover table-sm";
 }
 
 window.onload = function() {
@@ -39,8 +36,7 @@ window.onload = function() {
             plot_exp().then(r => console.log("Plotting"))
         }
     })
-
-    table_reformat_init()
+    table_reformat_init.then(r => console.log("table class to reformat"))
 }
 
 // function to send a plot request to the server
