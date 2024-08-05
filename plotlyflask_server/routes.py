@@ -3,6 +3,7 @@ from flask import render_template, jsonify, redirect, request
 from flask import current_app as app
 from flask import send_from_directory
 from plotlyflask_server.data_parser.RAFT_knowledgebase import KnowledgeBase
+import json
 
 kb = KnowledgeBase()
 
@@ -22,8 +23,8 @@ def intro_page():
     if request.method == "POST":
         query = request.form.to_dict(flat=False)
         dataframe = kb.refine_search(**query)
-
-        return render_template("raft_knowledge_base.html", dataframe=dataframe.to_html(index=False), prior_search=query)
+        prior_search = ("\n".join("{}\t{}".format(*item) for item in query.items() if item[1] != [""]))
+        return render_template("raft_knowledge_base.html", dataframe=dataframe.to_html(index=False), prior_search=prior_search)
     else:
         return render_template("raft_knowledge_base.html")
 
