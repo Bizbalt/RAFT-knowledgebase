@@ -17,7 +17,7 @@ async function options_init() {
         const dropdownSel = dropdownSelectors[dropdown]
         for (const option of dropdown_options_dic[dropdown]){
             dropdownSel.options[dropdownSel.options.length] = new Option(option, option);
-    }
+        }
     }
 }
 
@@ -25,6 +25,11 @@ async function table_reformat_init() {
     // search for the table in the results div
     const table = document.getElementById("results").getElementsByClassName("dataframe")[0];
     table.className = "table table-striped table-bordered table-hover table-sm";
+
+    // add onclick for every header
+    for (const [index, th] of Array.from(table.getElementsByTagName("th")).entries()){
+        th.setAttribute("onclick", `sort_table(${index})`)
+    }
 }
 
 window.onload = function() {
@@ -36,7 +41,7 @@ window.onload = function() {
             plot_exp().then(r => console.log("Plotting"))
         }
     })
-    table_reformat_init.then(r => console.log("table class to reformat"))
+    table_reformat_init().then(r => console.log("table class to reformat"))
 }
 
 // function to send a plot request to the server
