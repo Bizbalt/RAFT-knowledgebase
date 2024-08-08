@@ -120,7 +120,7 @@ class KnowledgeBase:
         exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
         if any([plot_mn, plot_mw]):
             pass
-            # todo exp_fig.update_layout(yaxis_title=r"$\\text{Mn, Mw }[g/mol] \cdot 10^{-5}/ \ [ \%]$")
+# todo write right axis title when including Mn or Mw sth like: exp_fig.update_layout(yaxis_title=r"$\\text{Mn, Mw }[g/mol] \cdot 10^{-5}/ \ [ \%]$")
 
         return exp_fig
 
@@ -144,4 +144,4 @@ class KnowledgeBase:
 
         search_q = dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent]
 
-        return search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]]
+        return search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(by=["score"], ascending=False)
