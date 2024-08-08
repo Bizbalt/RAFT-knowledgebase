@@ -118,6 +118,10 @@ class KnowledgeBase:
                                     marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), opacity=0.5)
 
         exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
+        if any([plot_mn, plot_mw]):
+            pass
+            # todo exp_fig.update_layout(yaxis_title=r"$\\text{Mn, Mw }[g/mol] \cdot 10^{-5}/ \ [ \%]$")
+
         return exp_fig
 
     def find_optimal_synthesis(self, monomer: str | list):

@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="../static/raft_knowledgebase.css"/>
     <script type="text/javascript" src="../static/sort_table.js"></script>
+
 </head>
 
 <body>
@@ -42,10 +43,24 @@
     </div>
     <br>
     <div class="results" id="results" >
+         &#x2195 Sort by column when clicking on the header.
     {{ dataframe | safe }}
     </div>
     <br>
     <label for="search"></label><input type="text" id="search" placeholder="e.g. 69, 137" autocomplete="experiment_search">
     <button onclick="plot_exp()">Search</button>
+    <div>
+        <input type="checkbox" id="mn" name="plot options" value="mn" />
+        <label for="mn">Plot Mn</label>
+
+        <input type="checkbox" id="mw" name="plot options" value="mw" />
+        <label for="mw">Plot Mw</label>
+        ||
+        <input type="checkbox" id="fit_curve" name="plot options" value="fit_curve" />
+        <label for="fit_curve">Fit curve to conversion</label>
+        <input type="checkbox" id="fit_derivat_curve" name="plot options" value="fit_derivat_curve" />
+        <label for="fit_derivat_curve">Fit derivative of fit</label>
+    </div>
+
     <div class="results" id="results_div" ></div>
 </body>
