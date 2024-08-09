@@ -119,8 +119,9 @@ class KnowledgeBase:
 
         exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
         if any([plot_mn, plot_mw]):
-            pass
-# todo write right axis title when including Mn or Mw sth like: exp_fig.update_layout(yaxis_title=r"$\\text{Mn, Mw }[g/mol] \cdot 10^{-5}/ \ [ \%]$")
+            exp_fig.update_layout(yaxis_title=
+                                  "Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
+                                  overwrite=True)
 
         return exp_fig
 
