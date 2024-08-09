@@ -55,10 +55,10 @@ async function plot_exp() {
 
     let experiment_list = document.getElementById("search").value;
     // create a list of the experiments numbers as strings
-    let experiments_list = experiment_list.split(",").map(x => x.trim())
+    let experiments_list = experiment_list.split(" ").map(x => x.trim())
     let plot_mn = document.getElementById("mn").checked
     let plot_mw = document.getElementById("mw").checked
-    let fit_curves = null//[document.getElementById("fit_curve").checked, document.getElementById("fit_derivat_curve").checked]
+    let fit_curves = [document.getElementById("fit_curve").checked, document.getElementById("fit_derivat_curve").checked]
     const response = await fetch(url + `plot_exp`, {
         method: "POST",
         headers: {'Content-Type': 'application/json'},
