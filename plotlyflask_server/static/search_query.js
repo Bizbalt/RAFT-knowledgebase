@@ -35,15 +35,15 @@ async function table_reformat_init() {
 }
 
 window.onload = function() {
-    options_init().then(r => console.log("Dropdowns initialized"))
+    options_init().then(() => console.log("Dropdowns initialized"))
 
     const input_field = document.getElementById("search");
     input_field.addEventListener("keyup", ({key}) => {
         if (key === "Enter") {
-            plot_exp().then(r => console.log("Plotting"))
+            plot_exp().then(() => console.log("Plotting"))
         }
     })
-    table_reformat_init().then(r => console.log("Table class reformatted"), error => console.log(error))
+    table_reformat_init().then(() => console.log("Table class reformatted"), error => console.log(error))
 }
 
 // function to send a plot request to the server

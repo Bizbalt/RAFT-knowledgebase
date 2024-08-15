@@ -143,7 +143,7 @@ class KnowledgeBase:
         if raft_agent and not raft_agent == [""]:
             search_q_raft_agent = dataframe["RAFT-agent"].apply(lambda x: x in [*raft_agent])
 
-        search_q = dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent]
+        search_q = dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent].copy(deep=True)
         search_q["exp_nr"] = search_q["exp_nr"].apply(lambda x: x.zfill(3))
 
         return search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(by=["score"], ascending=False)
