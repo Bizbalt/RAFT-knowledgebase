@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.onscroll = function() {scrollFunction()};
 
   function scrollFunction() {
-    if (document.body.scrollTop > 40 || document.documentElement.scrollTop > 40) {
+    if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
       topButton.style.display = "block";
     } else {
       topButton.style.display = "none";

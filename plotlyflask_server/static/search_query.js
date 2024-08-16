@@ -23,7 +23,7 @@ async function options_init() {
 
 async function table_reformat_init() {
     // search for the table in the results div
-    const table = document.getElementById("results").getElementsByClassName("dataframe")[0];
+    const table = document.getElementById("results_div_table").getElementsByClassName("dataframe")[0];
     if (table === undefined) {
         return Promise.reject("No table loaded.")}
     table.className = "table table-striped table-bordered table-hover table-sm";
@@ -33,7 +33,7 @@ async function table_reformat_init() {
         th.setAttribute("onclick", `sort_table(${index})`)
     }
 
-    document.getElementById("results").style.display = "block";
+    document.getElementById("results_div_table").style.display = "block";
 }
 
 window.onload = function() {
@@ -50,7 +50,7 @@ window.onload = function() {
 
 // function to send a plot request to the server
 async function plot_exp() {
-    const results_div = document.getElementById("results_div");
+    const results_div = document.getElementById("results_div_plot");
     while (results_div.firstChild) {
         results_div.removeChild(results_div.firstChild);
     }
@@ -73,7 +73,7 @@ async function plot_exp() {
 
     const content = await response.json()
     loading_gif.remove();
-    Plotly.newPlot("results_div",content.data, content.layout);
+    Plotly.newPlot("results_div_plot",content.data, content.layout);
 
-    document.getElementById("results_div").scrollIntoView()
+    document.getElementById("results_div_plot").scrollIntoView()
 }

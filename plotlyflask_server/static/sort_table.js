@@ -1,6 +1,6 @@
 function sort_table(column_number) { // this function is called per onclick event on headers
   let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-  table = document.getElementById("results").children[0];
+  table = document.getElementById("results_div_table").children[0];
   switching = true;
   // Set the sorting direction to ascending:
   dir = "asc";
