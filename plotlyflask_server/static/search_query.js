@@ -32,6 +32,8 @@ async function table_reformat_init() {
     for (const [index, th] of Array.from(table.getElementsByTagName("th")).entries()){
         th.setAttribute("onclick", `sort_table(${index})`)
     }
+
+    document.getElementById("results").style.display = "block";
 }
 
 window.onload = function() {
@@ -73,5 +75,5 @@ async function plot_exp() {
     loading_gif.remove();
     Plotly.newPlot("results_div",content.data, content.layout);
 
-
+    document.getElementById("results_div").scrollIntoView()
 }

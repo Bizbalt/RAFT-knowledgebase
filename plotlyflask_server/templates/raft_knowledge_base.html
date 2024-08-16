@@ -35,29 +35,32 @@
         <option value="" selected="selected">any</option>
     </select>
 
-    <input type="submit" value="Search">
+    <input class="btn btn-primary" type="submit" value="Search">
     </form>
     <div class="prior search" id="prior_search" style="color:darkgray">
         Prior search: {{ prior_search }}
     </div>
     <br>
-    <div class="results" id="results" >
+    <div class="results" id="results" style="display: none">
          &#x2195 Sort by column when clicking on the header.
     {{ dataframe | safe }}
     </div>
-    <br>
-    <label for="search"></label><input type="text" id="search" placeholder="e.g. &quot;469 137 226&quot;" autocomplete="experiment_search">
-    <button onclick="plot_exp()">Search</button>
+
+    <div class="mb-3">
+        <label for="search" class="col-form-label">Experiment numbers</label>
+        <button class="btn btn-primary" onclick="plot_exp()">Search</button>
+        <input class="form-control" type="text" id="search" placeholder="e.g. &quot;469 137 226&quot;" autocomplete="experiment_search">
+    </div>
     <div>
-        <input type="checkbox" id="mn" name="plot options" value="mn" />
+        <input class="form-check-input" type="checkbox" id="mn" name="plot options" value="mn" />
         <label for="mn">Plot Mn</label>
 
-        <input type="checkbox" id="mw" name="plot options" value="mw" />
+        <input class="form-check-input" type="checkbox" id="mw" name="plot options" value="mw" />
         <label for="mw">Plot Mw</label>
         || For conversion:
-        <input type="checkbox" id="fit_curve" name="plot options" value="fit_curve" />
+        <input class="form-check-input" type="checkbox" id="fit_curve" name="plot options" value="fit_curve" />
         <label for="fit_curve">Fit curve to conversion</label>
-        <input type="checkbox" id="fit_derivat_curve" name="plot options" value="fit_derivat_curve" />
+        <input class="form-check-input" type="checkbox" id="fit_derivat_curve" name="plot options" value="fit_derivat_curve" />
         <label for="fit_derivat_curve">Fit derivative of fit</label>
     </div>
 
