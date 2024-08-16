@@ -1,8 +1,17 @@
 body {
   width: 95%;
   margin: auto;
+  padding-bottom: 5rem;
 }
 
 .table{
   margin-bottom: 0;
+}
+
+.btn-totop{
+  display: none; /* Hidden by default */
+  position: fixed; /* Fixed/sticky position */
+  bottom: 20px; /* Place the button at the bottom of the page */
+  z-index: 99; /* Make sure its on top */
+  width: 95%; /* have 2,5% margin on each side */
 }
