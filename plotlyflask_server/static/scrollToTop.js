@@ -1,15 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
   // Get the button:
-  const topButton = document.getElementById("myBtn");
+  const topButton = document.getElementById("totop");
 
-  // When the user scrolls down 20px from the top of the document, show the button
+  // When the user scrolls down from the top of the document, show the button
   window.onscroll = function() {scrollFunction()};
 
   function scrollFunction() {
     if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
-      topButton.style.display = "block";
+      topButton.style.animation = "fadeIn 0.3s";
+      topButton.style.opacity = "1";
     } else {
-      topButton.style.display = "none";
+      topButton.style.animation = "fadeOut 0.3s";
+      topButton.style.opacity = "0";
     }
   }
 });

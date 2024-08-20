@@ -41,7 +41,7 @@
         Prior search: {{ prior_search }}
     </div>
     <br>
-    <div class="results" id="results_div_table" style="display: none">
+    <div class="results" id="results_div_table" style="display: none; max-height: 600px; overflow: auto;">
          &#x2195 Sort by column when clicking on the header.
     {{ dataframe | safe }}
     </div>
@@ -66,5 +66,5 @@
 
     <div class="results" id="results_div_plot"></div>
 
-    <button type="button" class="btn btn-primary btn-lg btn-totop" onclick="topFunction()" id="myBtn" title="Go to top">Top</button>
+    <button type="button" class="btn btn-primary btn-lg btn-totop" onclick="topFunction()" id="totop" title="Go to top">Top</button>
 </body>
