@@ -301,7 +301,33 @@ def format_database_to_kinetics_df():
                 (12 - row.error_score) / 12) * 0.5))
     kinetics_df["score"] = score
 
-    # pickle dataframe for reload on same day and overwrite prior file
+    # re-involve the abortive experiments with a score of 0
+    # 1st get the experiments from the discarded_df
+    # 2nd count those nunique and bring them in the same shape as the kinetics_df
+    #   translate monomer and agent numbers and letters
+    #   leave conversion, time, score and so forth 0
+    # 3rd append them to the kinetics_df
+    # 4th drop all duplicate from the discarded only
+    #   combine both, drop all duplicates for monomer, solvent, RAFT-Agent
+    #   keep the remaining exp_nr and mask with only them what should be left in the reformatted_discarded and drop the rest
+    #   finally concat the filtered_reformatted_discarded and the kinetics_df for good
+    reformatted_discarded = sRt.discarded_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
+    # rename and reorder columns
+    reformatted_discarded.columns = ["exp_nr", "monomer", "RAFT-agent", "solvent"]
+    reformatted_discarded["exp_nr"] = reformatted_discarded["exp_nr"].astype(str)
+    mapables = ["monomer", "RAFT-agent", "solvent"]
+    reformatted_discarded[mapables] = reformatted_discarded[mapables].map(lambda x: reaction_descriptors_dict[x])
+    reformatted_discarded["score"] = 0
+
+    # this series withholds all the exp numbers that should still be present in the discarded set
+    exp_nr_to_keep = \
+        pd.concat([kinetics_df, reformatted_discarded]).drop_duplicates(subset=["monomer", "RAFT-agent", "solvent"],
+                                                                        keep=False)["exp_nr"]
+    # create a mask
+    reform_to_keep = reformatted_discarded["exp_nr"].isin(exp_nr_to_keep)
+    kinetics_df = pd.concat([kinetics_df, reformatted_discarded[reform_to_keep]])
+
+    # pickle dataframe for reload on no change and overwrite prior file
     kinetics_df.to_pickle(pickle_path)
 
     return kinetics_df
