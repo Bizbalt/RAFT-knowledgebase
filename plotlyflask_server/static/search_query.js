@@ -23,7 +23,8 @@ async function options_init() {
 
 async function table_reformat_init() {
     // search for the table in the results div
-    const table = document.getElementById("results_div_table").getElementsByClassName("dataframe")[0];
+    let table, rows
+    table = document.getElementById("results_div_table").getElementsByClassName("dataframe")[0];
     if (table === undefined) {
         return Promise.reject("No table loaded.")}
     table.className = "table table-striped table-bordered table-hover table-sm";
@@ -35,17 +36,19 @@ async function table_reformat_init() {
     document.getElementById("results_div_table").style.display = "block";
 
     // recolor rows that have a score of 0 red-ish
-    let rows = table.rows;
+    rows = table.rows;
     // iterate through every but the first line
-    for (let i = 1; i < (rows.length - 1); i++) {
+    const score_col_num =  rows[1].getElementsByTagName("TD").length -1
+    for (let i = 1; i < (rows.length); i++) {
         const row_elements = rows[i].getElementsByTagName("TD")
         // get the score row
-        const score = row_elements["score"];
-        // decide to change the color depending on the score bein higher than 0
-        if (!(score > 0)){
-            for (let ele in row_elements){
-                console.log(ele)
+        const score = row_elements[score_col_num].innerText;
+        // decide to change the color depending on the score being higher than 0
+        if (!parseFloat(score) > 0){
+            for (let ele of row_elements){
                 // color each element
+                ele.style.backgroundColor = "#ffc8be"
+                ele.style.padding = "0 0.25rem"
             }
         }
 
