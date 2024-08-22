@@ -32,8 +32,24 @@ async function table_reformat_init() {
     for (const [index, th] of Array.from(table.getElementsByTagName("th")).entries()){
         th.setAttribute("onclick", `sort_table(${index})`)
     }
-
     document.getElementById("results_div_table").style.display = "block";
+
+    // recolor rows that have a score of 0 red-ish
+    let rows = table.rows;
+    // iterate through every but the first line
+    for (let i = 1; i < (rows.length - 1); i++) {
+        const row_elements = rows[i].getElementsByTagName("TD")
+        // get the score row
+        const score = row_elements["score"];
+        // decide to change the color depending on the score bein higher than 0
+        if (!(score > 0)){
+            for (let ele in row_elements){
+                console.log(ele)
+                // color each element
+            }
+        }
+
+    }
 }
 
 window.onload = function() {
