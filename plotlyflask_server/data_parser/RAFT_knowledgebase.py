@@ -30,6 +30,15 @@ def add_fits_to_plot(figure, fit_func, fit_func_params, fit_func_derivative=None
             opacity=0.3, line=dict(dash="dash"), name=f"{fit_func_derivative.__name__}", *args, **kwargs)
 
 
+new_headers = {"exp_nr": "Exp. Nr.",
+               "max_con": "Max. Conv. [%]",
+               "theo_react_end": "Theo. React. End [h]",
+               "monomer": "Monomer",
+               "solvent": "Solvent",
+               "RAFT-agent": "RAFT-agent",
+               "score": "Score"}
+
+
 class KnowledgeBase:
     def __init__(self):
         self.kinetics_df = format_database_to_kinetics_df()
@@ -144,6 +153,14 @@ class KnowledgeBase:
             search_q_raft_agent = dataframe["RAFT-agent"].apply(lambda x: x in [*raft_agent])
 
         search_q = dataframe[search_q_monomer & search_q_solvent & search_q_raft_agent].copy(deep=True)
-        search_q["exp_nr"] = search_q["exp_nr"].apply(lambda x: x.zfill(3))
 
-        return search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(by=["score"], ascending=False)
+        # reformatting for the website-look
+        search_q["exp_nr"] = search_q["exp_nr"].apply(lambda x: x.zfill(3))
+        search_q["max_con"] = search_q["max_con"].apply(lambda x: x*100)
+        # truncate the conversion reaction end and score to 2 decimal places
+        search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(lambda x: round(x, 2))
+        reformatted_search = search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
+            by=["score"], ascending=False)
+        reformatted_search.columns = [new_headers[col] for col in reformatted_search.columns]
+
+        return reformatted_search
