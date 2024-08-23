@@ -1,4 +1,4 @@
-function sort_table(column_number) { // this function is called per onclick event on headers
+function sort_table_style(column_number) { // bootstrap preserving O(n^2) sort
   let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
   table = document.getElementById("results_div_table").children[0];
   switching = true;
@@ -51,4 +51,37 @@ function sort_table(column_number) { // this function is called per onclick even
       }
     }
   }
+}
+function sort_table_fast(column_number) { // fast O (n*log(n)) sort
+  let table = document.getElementById("results_div_table").children[0];
+  let rows = Array.from(table.rows).slice(1); // Convert rows to array and exclude the header row
+  let dir = table.getAttribute("data-sort-dir") || "asc"; // Get current sorting direction or default to "asc"
+
+  // Sort the rows array based on the content in the specified column
+  rows.sort((a, b) => {
+    let x = a.getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
+    let y = b.getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
+
+    if (x < y) return dir === "asc" ? -1 : 1;
+    if (x > y) return dir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  // Re-arrange rows in the table based on the sorted order, preserving formatting
+  rows.forEach(row => table.appendChild(row));
+
+  // Toggle direction for the next sort
+  dir = dir === "asc" ? "desc" : "asc";
+  table.setAttribute("data-sort-dir", dir);
+}
+
+function sort_table(column_number){ // this function is called per onclick event on headers
+  // depending on the size of the table the slow but bootstrap preserving function will be used
+    let table_size = document.getElementById("results_div_table").children[0].rows.length;
+    if (table_size < 50){
+        sort_table_style(column_number);
+    }
+    else{
+        sort_table_fast(column_number);
+    }
 }

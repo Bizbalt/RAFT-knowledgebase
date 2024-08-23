@@ -90,7 +90,7 @@ class KnowledgeBase:
         """
         if fit_curves is None:
             fit_curves = [True, True]
-        plot_data = self.search_for_exp(exp_nr)
+        plot_data = self.search_for_exp(exp_nr).dropna()
         exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
         for kinetic_to_plot in plot_data.itertuples():
             x_data, ydata = kinetic_to_plot.conv_time_data
