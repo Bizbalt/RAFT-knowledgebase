@@ -7,11 +7,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function scrollFunction() {
     if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
+      topButton.style.display = "block";
       topButton.style.animation = "fadeIn 0.3s";
       topButton.style.opacity = "1";
     } else {
       topButton.style.animation = "fadeOut 0.3s";
       topButton.style.opacity = "0";
+      topButton.style.display = "none";
     }
   }
 });
