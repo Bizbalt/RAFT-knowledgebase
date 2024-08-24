@@ -33,6 +33,7 @@ def add_fits_to_plot(figure, fit_func, fit_func_params, fit_func_derivative=None
 new_headers = {"exp_nr": "Exp. Nr.",
                "max_con": "Max. Conv. [%]",
                "theo_react_end": "Theo. React. End [h]",
+               "max_mn": "Max. Mn [10^-5 g/mol]",
                "monomer": "Monomer",
                "solvent": "Solvent",
                "RAFT-agent": "RAFT-agent",
@@ -159,7 +160,7 @@ class KnowledgeBase:
         search_q["max_con"] = search_q["max_con"].apply(lambda x: x*100)
         # truncate the conversion reaction end and score to 2 decimal places
         search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(lambda x: round(x, 2))
-        reformatted_search = search_q[["exp_nr", "max_con", "theo_react_end", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
+        reformatted_search = search_q[["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
             by=["score"], ascending=False)
         reformatted_search.columns = [new_headers[col] for col in reformatted_search.columns]
 

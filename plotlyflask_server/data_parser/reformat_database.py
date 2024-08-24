@@ -187,7 +187,7 @@ def format_database_to_kinetics_df():
 
         kinetic_curves.append(kinetic_curve_entries)
 
-    kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'monomer',
+    kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'max_mn', 'monomer',
                                         'RAFT-agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
                                         'p1_p2_covariance', 'p2_variance', 'squared_error', 'conv_time_data',
                                         'Mn_time_data', 'Mw_time_data'])  # create new dataframe with kinetics per row
@@ -211,7 +211,8 @@ def format_database_to_kinetics_df():
         squared_error = ng_fit["sq_err"]
 
         # fitting section for Mn
-        p_initial = [max(ydata_Mn[~np.isnan(ydata_Mn)]), 0.1, 0]
+        max_Mn = max(ydata_Mn[~np.isnan(ydata_Mn)])
+        p_initial = [max_Mn, 0.1, 0]
         ng_fit_Mn = fit_and_exclude_outliers(x=xdata, y=ydata_Mn, fit_func=neg_growth_abscissae, p0=p_initial,
                                              bounds=([0, -np.inf, -np.inf], [1, np.inf, np.inf]))
 
@@ -225,6 +226,7 @@ def format_database_to_kinetics_df():
 
         kinetics_df.loc[idx] = {"exp_nr": str(kinetic_curve["exp_nr"].iloc[1]), "max_con": max(ydata_conv),
                                 "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
+                                "max_mn": max_Mn,
                                 "monomer": kinetic_curve["monomer"].iloc[1],
                                 "RAFT-agent": kinetic_curve["RAFT-Agent"].iloc[1],
                                 "solvent": kinetic_curve["solvent"].iloc[1],
