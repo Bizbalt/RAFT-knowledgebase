@@ -33,7 +33,7 @@ def add_fits_to_plot(figure, fit_func, fit_func_params, fit_func_derivative=None
 new_headers = {"exp_nr": "Exp. Nr.",
                "max_con": "Max. Conv. [%]",
                "theo_react_end": "Theo. React. End [h]",
-               "max_mn": "Max. Mn [10^-5 g/mol]",
+               "max_mn": "Max. Mn [10<sup>-5</sup> g/mol]",
                "monomer": "Monomer",
                "solvent": "Solvent",
                "RAFT-agent": "RAFT-agent",

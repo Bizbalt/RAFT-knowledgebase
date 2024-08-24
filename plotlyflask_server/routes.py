@@ -24,7 +24,7 @@ def intro_page():
         query = request.form.to_dict(flat=False)
         dataframe = kb.refine_search(**query)
         prior_search = ("\n".join("{}\t{}".format(*item) for item in query.items() if item[1] != [""]))
-        return render_template("raft_knowledge_base.html", dataframe=dataframe.to_html(index=False), prior_search=prior_search)
+        return render_template("raft_knowledge_base.html", dataframe=dataframe.to_html(index=False, escape=False), prior_search=prior_search)
     else:
         return render_template("raft_knowledge_base.html")
 
