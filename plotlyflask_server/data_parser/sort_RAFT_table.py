@@ -74,21 +74,21 @@ import itertools
 from datetime import datetime
 
 #######################################################
-print(os.getcwd())
+
 # 2. Definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "data/kinetics_data/2023_07_07 - evaluation table (NMR and SEC).xlsx"
 OUTPUT_FILE_PATH = os.path.join("data/kinetics_data",
                                 str(datetime.today().date()) + " - evaluation table (NMR and SEC)_curated.xlsx")
 
-# 3. read data from excel file to pd dataframe
-df = pd.read_excel(INPUT_FILE_PATH)  # reads excel file to pandas dataframe
+# 3. read data from Excel file to pd dataframe
+df = pd.read_excel(INPUT_FILE_PATH)  # reads Excel file to pandas dataframe
 
 #######################################################
 
 # 4. restructure the dataframe
 # 4.1. Basic changes
 df.dropna(inplace=True, how="all")  # drop all completely empty rows
-df = df.drop(df.columns[0], axis=1)  # drop first column (legend in the excel file)
+df = df.drop(df.columns[0], axis=1)  # drop first column (legend in the Excel file)
 df.reset_index(drop=True, inplace=True)  # reset index after row removing
 
 # 4.2. change header of dataframe to more readable names
@@ -183,7 +183,7 @@ df.drop(df[df['use data for AI'] == 0].index, inplace=True)
 df = df.reset_index(drop=True)
 
 
-# 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to excel
+# 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to Excel
 #  file as discarded samples
 #   5.2.2 and 5.2.3 do the same with Precipitation and gelation/phase separation in the reactor
 criteria_and_threshold = {"reactor is underfilled after polymerization?": 1.1,
@@ -447,9 +447,9 @@ for RAFT_agent_options, monomer_options, solvent_options in itertools.product(RA
     # 6.4. Create a dataframe from the list of permutations
 permutations_df = pd.DataFrame(permutations, columns=['Missing experiments determiners'])
 
-# 6.5. Compare the permutations dataframe with the curated dataframe from the excel file
+# 6.5. Compare the permutations dataframe with the curated dataframe from the Excel file
 # 6.5.1. Check if the permutations are part of the existing dataframe
-#       if so, delete them from the permutations dataframe, which is later printed to the excel file to see which
+#       if so, delete them from the permutations dataframe, which is later printed to the Excel file to see which
 #       experiments still need to be conducted
 permutations_df.drop(permutations_df[permutations_df['Missing experiments determiners'].isin(
     df['possible sample determiner-original'])].index, inplace=True)
@@ -462,7 +462,7 @@ if __name__ == '__main__':
     # 7. save the dataframe to Excel file
     # 7.1. # create an Excel writer object
     with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
-        # use to_excel function and specify the sheet_name and index
+        # use to_Excel function and specify the sheet_name and index
         # to store the dataframe in specified sheet
         df.to_excel(writer, sheet_name='utilizable samples', index=False)
         discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
