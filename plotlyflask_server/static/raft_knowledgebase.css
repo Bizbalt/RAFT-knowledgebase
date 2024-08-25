@@ -29,3 +29,8 @@ body {
   0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+.form-control::placeholder {
+  color:var(--bs-secondary-color);
+  opacity:50%;
+}

@@ -65,6 +65,8 @@ window.onload = function() {
         }
     })
     table_reformat_init().then(() => console.log("Table class reformatted"), error => console.log(error))
+
+    prohibit_illegal_checkbox_choices()
 }
 
 // function to send a plot request to the server
@@ -73,17 +75,17 @@ async function plot_exp() {
     while (results_div.firstChild) {
         results_div.removeChild(results_div.firstChild);
     }
-
     let experiment_list = document.getElementById("search").value;
     // create a list of the experiments numbers as strings
     let experiments_list = experiment_list.split(" ").map(x => String(Number(x)))
+    let plot_conv = document.getElementById("conv").checked
     let plot_mn = document.getElementById("mn").checked
     let plot_mw = document.getElementById("mw").checked
-    let fit_curves = [document.getElementById("fit_curve").checked, document.getElementById("fit_derivat_curve").checked]
+    let fit_curves = [document.getElementById("fit_curve").checked, document.getElementById("fit_derivative_curve").checked]
     const response = await fetch(url + `plot_exp`, {
         method: "POST",
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ exp_nr: experiments_list, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves })
+        body: JSON.stringify({ exp_nr: experiments_list, plot_conv:plot_conv, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves })
         })
 
     const loading_gif = document.createElement("img");
@@ -95,4 +97,33 @@ async function plot_exp() {
     Plotly.newPlot("results_div_plot",content.data, content.layout);
 
     document.getElementById("results_div_plot").scrollIntoView()
+}
+
+async function prohibit_illegal_checkbox_choices(){
+    const conv_neg_fit_checkbox = document.getElementById("fit_curve")
+    const conv_neg_der_fit_checkbox = document.getElementById("fit_derivative_curve")
+    const conv_checkbox = document.getElementById("conv")
+    const conv_options_div = document.getElementById("conv_options")
+    console.log(conv_checkbox)
+    console.log(conv_options_div)
+    conv_checkbox.addEventListener("change", enable_conv_options)
+    function enable_conv_options(){
+        if (conv_checkbox.checked){
+            conv_options_div.style.display = "block";
+        }
+        else {
+            conv_options_div.style.display = "none";
+        }
+    }
+
+    conv_neg_fit_checkbox.addEventListener("change", enable_neg_der_fit_box)
+    function enable_neg_der_fit_box() {
+        if (conv_neg_fit_checkbox.checked){
+            conv_neg_der_fit_checkbox.disabled = false;
+        }
+        else {
+            conv_neg_der_fit_checkbox.checked = false;
+            conv_neg_der_fit_checkbox.disabled = true;
+        }
+    }
 }

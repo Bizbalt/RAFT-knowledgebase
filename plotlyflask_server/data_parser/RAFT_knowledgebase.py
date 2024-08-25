@@ -77,12 +77,15 @@ class KnowledgeBase:
             return self.kinetics_df[self.kinetics_df['exp_nr'].isin(exp_nr)]
 
     def plot_exp(
-            self, exp_nr: str | list, plot_mn: bool = False, plot_mw: bool = False, fit_curves=None, *args, **kwargs):
+            self, exp_nr: str | list, plot_conv: bool = True, plot_mn: bool = False, plot_mw: bool = False,
+            fit_curves=None, *args, **kwargs):
         """ Plot the kinetic curves for the experiment number(s) exp_nr.
         Parameters
             ----------
             exp_nr
                 The experiment number(s) to plot
+            plot_conv
+                Whether to plot the conversion
             plot_mn
                 Whether to plot the Mn data
             plot_mw
@@ -103,18 +106,20 @@ class KnowledgeBase:
         plot_data = self.search_for_exp(exp_nr).dropna()
         exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
         for kinetic_to_plot in plot_data.itertuples():
-            x_data, ydata = kinetic_to_plot.conv_time_data
             marker_dict = dict(color=self.colors[int(kinetic_to_plot.Index) % len(self.colors)])
-            exp_fig.add_scatter(x=x_data, y=ydata, mode="lines+markers", name=kinetic_to_plot.exp_nr,
-                                marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
-            if fit_curves[0]:
-                if fit_curves[1]:
-                    add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
-                                     fit_func_derivative=neg_growth_derivative, marker=marker_dict,
-                                     legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
-                else:
-                    add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
-                                     marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
+            if plot_conv:
+                x_data, ydata = kinetic_to_plot.conv_time_data
+                exp_fig.add_scatter(x=x_data, y=ydata, mode="lines+markers", name=kinetic_to_plot.exp_nr,
+                                    marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
+
+                if fit_curves[0]:
+                    if fit_curves[1]:
+                        add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
+                                         fit_func_derivative=neg_growth_derivative, marker=marker_dict,
+                                         legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
+                    else:
+                        add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
+                                         marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
 
             if plot_mn:
                 marker_dict["color"] = color_variant(marker_dict["color"], 30)
@@ -127,11 +132,18 @@ class KnowledgeBase:
                 exp_fig.add_scatter(x=x2_data, y=y2_data, mode="lines+markers", name="Mw of " + kinetic_to_plot.exp_nr,
                                     marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), opacity=0.5)
 
-        exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
-        if any([plot_mn, plot_mw]):
-            exp_fig.update_layout(yaxis_title=
-                                  "Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
-                                  overwrite=True)
+        if plot_conv:
+            exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
+
+            if any([plot_mn, plot_mw]):
+                exp_fig.update_layout(yaxis_title=
+                                      "Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
+                                      overwrite=True)
+
+        elif any([plot_mn, plot_mw]):
+            exp_fig.update_layout(
+                yaxis=dict(range=[0, 0.5]), xaxis_title="Time [h]",
+                yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>")
 
         return exp_fig
 
@@ -157,10 +169,12 @@ class KnowledgeBase:
 
         # reformatting for the website-look
         search_q["exp_nr"] = search_q["exp_nr"].apply(lambda x: x.zfill(3))
-        search_q["max_con"] = search_q["max_con"].apply(lambda x: x*100)
+        search_q["max_con"] = search_q["max_con"].apply(lambda x: x * 100)
         # truncate the conversion reaction end and score to 2 decimal places
-        search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(lambda x: round(x, 2))
-        reformatted_search = search_q[["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
+        search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(
+            lambda x: round(x, 2))
+        reformatted_search = search_q[
+            ["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
             by=["score"], ascending=False)
         reformatted_search.columns = [new_headers[col] for col in reformatted_search.columns]
 
