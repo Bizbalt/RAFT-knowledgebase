@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from plotly.subplots import make_subplots
 from .reformat_database import format_database_to_kinetics_df, neg_growth, neg_growth_derivative
 
 """ Functions for website-interaction-elements """
@@ -78,7 +79,7 @@ class KnowledgeBase:
 
     def plot_exp(
             self, exp_nr: str | list, plot_conv: bool = True, plot_mn: bool = False, plot_mw: bool = False,
-            fit_curves=None, *args, **kwargs):
+            fit_curves=None, stacked_plots=False, *args, **kwargs):
         """ Plot the kinetic curves for the experiment number(s) exp_nr.
         Parameters
             ----------
@@ -93,6 +94,8 @@ class KnowledgeBase:
             fit_curves
                 A tuple with two boolean values, the first one determines whether to plot the fit curves, the second one
                 determines whether to plot the derivative of the fit curves.
+            stacked_plots
+                Whether to stack the plots
             args and kwargs
                 Additional arguments and keyword arguments will be passed to the plotly express line function
 
@@ -104,51 +107,83 @@ class KnowledgeBase:
         if fit_curves is None:
             fit_curves = [True, True]
         plot_data = self.search_for_exp(exp_nr).dropna()
-        exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
+
+        # stacked_plot_keywords = {}
+        if stacked_plots:
+            stack_amount = sum([plot_conv, plot_mn, plot_mw])
+            exp_fig = make_subplots(rows=stack_amount, cols=1, shared_xaxes=True)
+        #     stacked_plot_keywords = {"col": 1}
+
+        else:
+            exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
+
         for kinetic_to_plot in plot_data.itertuples():
+            stack_amount = 1
             marker_dict = dict(color=self.colors[int(kinetic_to_plot.Index) % len(self.colors)])
+            additional_plot_keywords = {"mode": "lines+markers",
+                                        "marker": marker_dict,
+                                        "name": kinetic_to_plot.exp_nr,
+                                        "legendgroup": str(kinetic_to_plot.exp_nr),
+                                        "col": 1}
             if plot_conv:
                 x_data, ydata = kinetic_to_plot.conv_time_data
-                exp_fig.add_scatter(x=x_data, y=ydata, mode="lines+markers", name=kinetic_to_plot.exp_nr,
-                                    marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
+                exp_fig.add_scatter(x=x_data, y=ydata, row=stack_amount, **additional_plot_keywords)
 
                 if fit_curves[0]:
                     if fit_curves[1]:
                         add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
                                          fit_func_derivative=neg_growth_derivative, marker=marker_dict,
-                                         legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
+                                         legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False, col=1, row=1)
                     else:
                         add_fits_to_plot(exp_fig, neg_growth, [kinetic_to_plot.fit_p1, kinetic_to_plot.fit_p2],
-                                         marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False)
+                                         marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False,
+                                         col=1, row=1)
+                if stacked_plots:
+                    exp_fig.update_yaxes(title_text="Conv [%]", row=stack_amount, col=1)
+                    stack_amount += 1
 
             if plot_mn:
                 marker_dict["color"] = color_variant(marker_dict["color"], 30)
                 x2_data, y2_data = kinetic_to_plot.Mn_time_data
-                if not plot_conv:
-                    y2_data = y2_data*10**5
-                exp_fig.add_scatter(x=x2_data, y=y2_data, mode="lines+markers", name="Mn of " + kinetic_to_plot.exp_nr,
-                                    marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
+                if not plot_conv or stacked_plots:
+                    y2_data = y2_data * 10 ** 5
+                exp_fig.add_scatter(x=x2_data, y=y2_data, row=stack_amount,
+                                    **additional_plot_keywords | {"name": "Mn of " + kinetic_to_plot.exp_nr})
+                if stacked_plots:
+                    exp_fig.update_yaxes(title_text="M<sub>n</sub> [g/mol]", row=stack_amount, col=1)
+                    stack_amount += 1
+
             if plot_mw:
                 marker_dict["color"] = color_variant(marker_dict["color"], -60)
                 x2_data, y2_data = kinetic_to_plot.Mw_time_data
-                if not plot_conv:
-                    y2_data = y2_data*10**5
-                exp_fig.add_scatter(x=x2_data, y=y2_data, mode="lines+markers", name="Mw of " + kinetic_to_plot.exp_nr,
-                                    marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), opacity=0.5)
+                if not plot_conv or stacked_plots:
+                    y2_data = y2_data * 10 ** 5
+                exp_fig.add_scatter(x=x2_data, y=y2_data, row=stack_amount,
+                                    **additional_plot_keywords | {"name": "Mw of " + kinetic_to_plot.exp_nr},
+                                    opacity=0.5)
 
-        if plot_conv:
-            exp_fig.update_layout(yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
+                if stacked_plots:
+                    exp_fig.update_yaxes(title_text="M<sub>w</sub> [g/mol]", row=stack_amount, col=1)
 
-            if any([plot_mn, plot_mw]):
-                exp_fig.update_layout(yaxis_title=
-                                      "Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
-                                      overwrite=True)
-
-        elif any([plot_mn, plot_mw]):
-            exp_fig.update_layout(
-                yaxis=dict(range=[0, 50000]), xaxis_title="Time [h]",
-                yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol]")
-
+        if not stacked_plots:
+            axis_case = [plot_conv, plot_mn, plot_mw]
+            match axis_case:
+                # conversion only
+                case [True, False, False]:
+                    exp_fig.update_layout(
+                        yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
+                # any of Mn Mw
+                case [False, True, True] | [False, False, True] | [False, True, False]:
+                    exp_fig.update_layout(
+                        yaxis=dict(range=[0, 50000]), xaxis_title="Time [h]",
+                        yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol]")
+                # conversion and any of Mn Mw
+                case [True, True, True] | [True, True, False] | [True, False, True]:
+                    exp_fig.update_layout(
+                        yaxis_title="Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
+                        overwrite=True)
+                case _:
+                    pass
         return exp_fig
 
     def find_optimal_synthesis(self, monomer: str | list):
@@ -178,7 +213,7 @@ class KnowledgeBase:
         search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(
             lambda x: round(x, 2))
         reformatted_search = search_q[
-            ["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "solvent", "RAFT-agent", "score"]].sort_values(
+            ["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "RAFT-agent", "solvent", "score"]].sort_values(
             by=["score"], ascending=False)
         reformatted_search.columns = [new_headers[col] for col in reformatted_search.columns]
 
