@@ -124,11 +124,15 @@ class KnowledgeBase:
             if plot_mn:
                 marker_dict["color"] = color_variant(marker_dict["color"], 30)
                 x2_data, y2_data = kinetic_to_plot.Mn_time_data
+                if not plot_conv:
+                    y2_data = y2_data*10**5
                 exp_fig.add_scatter(x=x2_data, y=y2_data, mode="lines+markers", name="Mn of " + kinetic_to_plot.exp_nr,
                                     marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr))
             if plot_mw:
                 marker_dict["color"] = color_variant(marker_dict["color"], -60)
                 x2_data, y2_data = kinetic_to_plot.Mw_time_data
+                if not plot_conv:
+                    y2_data = y2_data*10**5
                 exp_fig.add_scatter(x=x2_data, y=y2_data, mode="lines+markers", name="Mw of " + kinetic_to_plot.exp_nr,
                                     marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), opacity=0.5)
 
@@ -142,8 +146,8 @@ class KnowledgeBase:
 
         elif any([plot_mn, plot_mw]):
             exp_fig.update_layout(
-                yaxis=dict(range=[0, 0.5]), xaxis_title="Time [h]",
-                yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>")
+                yaxis=dict(range=[0, 50000]), xaxis_title="Time [h]",
+                yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol]")
 
         return exp_fig
 

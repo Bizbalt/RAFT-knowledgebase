@@ -34,3 +34,7 @@ body {
   color:var(--bs-secondary-color);
   opacity:50%;
 }
+
+input[type=checkbox][disabled] {
+  outline: 2px solid red;
+}
