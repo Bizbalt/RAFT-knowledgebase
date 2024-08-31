@@ -112,7 +112,7 @@ class KnowledgeBase:
         if stacked_plots:
             stack_amount = sum([plot_conv, plot_mn, plot_mw])
             exp_fig = make_subplots(rows=stack_amount, cols=1, shared_xaxes=True)
-        #     stacked_plot_keywords = {"col": 1}
+            exp_fig.update_xaxes(title_text="Time [h]", row=stack_amount, col=1)
 
         else:
             exp_fig = px.line(title=f"Kinetic Curve Fit for {exp_nr}", *args, **kwargs)
