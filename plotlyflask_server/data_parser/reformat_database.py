@@ -289,7 +289,7 @@ def format_database_to_kinetics_df():
     # first priority would be sorting after nearest to 80% conversion.
 
     # create a score ingesting the importance of the different kinetic descriptors
-    #     Conversion*1 + time*(-0.8) + error_score*(0.5)
+    #     Conversion*1 + time²*(-0.8) + error_score*(0.5)
     #     while spanning between the optimum and the least bearable values like in the following:
     #          Conversion: |con-0.8| - 0 (0.8 is the optimum)
     #             using a linear decreasing function -x*m+b
@@ -299,7 +299,7 @@ def format_database_to_kinetics_df():
     #             using a linear decreasing function -x*m+b
     score = []
     for row in kinetics_df.itertuples():
-        score.append(((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 72) ** 2 + 1) * 0.8 + (
+        score.append(((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 30) ** 2 + 1) * 0.8 + (
                 (12 - row.error_score) / 12) * 0.5))
     kinetics_df["score"] = score
 
