@@ -324,8 +324,8 @@ def format_database_to_kinetics_df():
     # this series withholds all the exp numbers that should still be present in the discarded set
     exp_nr_to_keep = pd.concat([kinetics_df,
                                 reformatted_discarded.drop_duplicates(
-                                    subset=["monomer", "RAFT-Agent", "solvent"], keep="first")]).drop_duplicates(
-                                    subset=["monomer", "RAFT-Agent", "solvent"], keep=False)["exp_nr"]
+                                    subset=["monomer", "RAFT-agent", "solvent"], keep="first")]).drop_duplicates(
+                                    subset=["monomer", "RAFT-agent", "solvent"], keep=False)["exp_nr"]
 
     # create a mask
     reform_to_keep = reformatted_discarded["exp_nr"].isin(exp_nr_to_keep)
