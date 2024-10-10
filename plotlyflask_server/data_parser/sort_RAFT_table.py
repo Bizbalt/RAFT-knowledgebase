@@ -456,7 +456,6 @@ permutations_df.drop(permutations_df[permutations_df['Missing experiments determ
 
 ###################################################################
 
-# ToDO: try to sort discarded kinetics per severity for fun mode
 
 if __name__ == '__main__':
     # 7. save the dataframe to Excel file
