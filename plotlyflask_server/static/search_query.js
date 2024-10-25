@@ -10,7 +10,7 @@ async function options_init() {
     const raft_agentSel = document.getElementById("raft_agent");
     const solventSel = document.getElementById("solvent");
 
-    const dropdownSelectors = {"monomer": monomerSel, "raft_agent": raft_agentSel, "solvent": solventSel}
+    const dropdownSelectors = {"monomer": monomerSel, "raft_agent": raft_agentSel, "solvent": solventSel} //ToDo: Lets show the first letter in uppercase
     const keys = ["monomer", "raft_agent", "solvent"]
 
     for (const dropdown of keys){
@@ -54,7 +54,7 @@ async function table_reformat_init() {
 
     }
 }
-
+//What does the "function" below do? --> please explain in a comment
 window.onload = function() {
     options_init().then(() => console.log("Dropdowns initialized"))
 
@@ -99,7 +99,7 @@ async function plot_exp() {
 
     document.getElementById("results_div_plot").scrollIntoView()
 }
-
+//ToDo: add explanation for the function below
 async function prohibit_illegal_checkbox_choices(){
     const conv_neg_fit_checkbox = document.getElementById("fit_curve")
     const conv_neg_der_fit_checkbox = document.getElementById("fit_derivative_curve")
