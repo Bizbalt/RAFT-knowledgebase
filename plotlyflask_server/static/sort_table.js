@@ -74,7 +74,7 @@ function sort_table_fast(column_number) { // fast O (n*log(n)) sort
   dir = dir === "asc" ? "desc" : "asc";
   table.setAttribute("data-sort-dir", dir);
 }
-
+//In this document everything is very well commented. Maybe you could add comments like this for all .js files. (I don't know if Copilot could help with that)
 function sort_table(column_number){ // this function is called per onclick event on headers
   // depending on the size of the table the slow but bootstrap preserving function will be used
     let table_size = document.getElementById("results_div_table").children[0].rows.length;
