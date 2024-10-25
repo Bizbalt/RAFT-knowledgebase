@@ -34,7 +34,7 @@ def add_fits_to_plot(figure, fit_func, fit_func_params, fit_func_derivative=None
 new_headers = {"exp_nr": "Exp. Nr.",
                "max_con": "Max. Conv. [%]",
                "theo_react_end": "Theo. React. End [h]",
-               "max_mn": "Max. Mn [10<sup>-5</sup> g/mol]",
+               "max_mn": "Max. Mn [10<sup>-5</sup> g/mol]", #really 10^-5 more 10^5
                "monomer": "Monomer",
                "solvent": "Solvent",
                "RAFT-agent": "RAFT-agent",
@@ -55,7 +55,7 @@ class KnowledgeBase:
                 A dictionary containing the dropdown options for the search form
         """
         return {
-            "monomer": self.kinetics_df["monomer"].unique().tolist(),
+            "monomer": self.kinetics_df["monomer"].unique().tolist(),   
             "solvent": self.kinetics_df["solvent"].unique().tolist(),
             "raft_agent": self.kinetics_df["RAFT-agent"].unique().tolist()
         }
@@ -108,6 +108,7 @@ class KnowledgeBase:
             fit_curves = [True, True]
         plot_data = self.search_for_exp(exp_nr).dropna()
 
+        #ToDo: explain more here in a comment, what you are doing below (at the moment it is not clear to me))
         # stacked_plot_keywords = {}
         if stacked_plots:
             stack_amount = sum([plot_conv, plot_mn, plot_mw])
@@ -186,11 +187,12 @@ class KnowledgeBase:
                     pass
         return exp_fig
 
+     # ToDo: explain more here in a comment, what you are doing below (at the moment it is not clear to me))
     def find_optimal_synthesis(self, monomer: str | list):
         search_q_monomer = [x in monomer for x in self.kinetics_df["monomer"]]
         result_df = self.kinetics_df[search_q_monomer].sort_values(by=["score"], ascending=False)
         return result_df
-
+    #ToDo: explain more here in a comment, what you are doing below (at the moment it is not clear to me))
     def refine_search(self, dataframe: pd.DataFrame = None, monomer: list = None, solvent: list = None,
                       raft_agent: list = None):
         if dataframe is None:
