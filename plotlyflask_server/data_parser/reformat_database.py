@@ -5,6 +5,8 @@ from scipy.optimize import curve_fit
 import pickle
 import os
 
+# ToDo: add docstrings to all functions and explain what the purpose of this .py file is
+# ToDo: check whether all functions are used and if not remove them
 
 def change_time_format_h(time_format):
     h_m_s = str(time_format).split(":")
@@ -33,7 +35,7 @@ def linear_growth(x, m):
     y = m * x
     return y
 
-
+# I do not understand the function as it seems to return the same value as the input --> please check
 def linear_growth_derivative(m):
     return m
 
