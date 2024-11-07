@@ -77,9 +77,8 @@ from datetime import datetime
 #######################################################
 
 # 2. Definition of the input and output file path for the Excel documents
-INPUT_FILE_PATH = "data/kinetics_data/2023_07_07 - evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = os.path.join("data/kinetics_data",
-                                str(datetime.today().date()) + " - evaluation table (NMR and SEC)_curated.xlsx")
+INPUT_FILE_PATH = "data/kinetics_data/evaluation table (NMR and SEC).xlsx"
+OUTPUT_FILE_PATH = os.path.join("data/kinetics_data", "evaluation table (NMR and SEC)_curated.xlsx")
 
 # 3. read data from Excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH)  # reads Excel file to pandas dataframe
@@ -457,12 +456,11 @@ permutations_df.drop(permutations_df[permutations_df['Missing experiments determ
 ###################################################################
 
 
-if __name__ == '__main__':
-    # 7. save the dataframe to Excel file
-    # 7.1. # create an Excel writer object
-    with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
-        # use to_Excel function and specify the sheet_name and index
-        # to store the dataframe in specified sheet
-        df.to_excel(writer, sheet_name='utilizable samples', index=False)
-        discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-        permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+# 7. save the dataframe to Excel file
+# 7.1. # create an Excel writer object
+with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
+    # use to_Excel function and specify the sheet_name and index
+    # to store the dataframe in specified sheet
+    df.to_excel(writer, sheet_name='utilizable samples', index=False)
+    discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
+    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)

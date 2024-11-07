@@ -46,3 +46,21 @@ def plot_exp():
     # create dictionary from json object
     exp_nr_n_settings = request.json
     return kb.plot_exp(**exp_nr_n_settings, template=None).to_json()  # "plotly_dark"
+
+
+@app.route("/experimenter_sheet")
+def experimenter_sheet():
+    return send_from_directory(
+        directory=os.path.join(app.root_path, "..", "data", "kinetics_data"),
+        path="evaluation table (NMR and SEC).xlsx",
+        as_attachment=True
+    )
+
+
+@app.route("/curated_data_sheet")
+def curated_data_sheet():
+    return send_from_directory(
+        directory=os.path.join(app.root_path, "..", "data", "kinetics_data"),
+        path="evaluation table (NMR and SEC)_curated.xlsx",
+        as_attachment=True
+    )
