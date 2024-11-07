@@ -1,4 +1,5 @@
 """
+Initial hard-coded data curation for the RAFT table experimenter spreadsheet
 
 Overview of data in Excel file
 
@@ -229,7 +230,7 @@ for column_name in filtered_columns_molar_mass:
         elif float(value) > 100000:
             df.loc[index, column_name] = np.nan
 
-''' Activation maybe later (if necessary)
+''' Activation maybe later (if required)
 
             #5.3.3. for dispersity remove > 2.2 with NaN and also remove the corresponding Mn and Mw values 
             #(the Mn and Mw parts still need to be implemented)
@@ -283,9 +284,8 @@ for i in range(1, len(df)):
         current_column = filtered_columns_conversion[col]
         previous_column = filtered_columns_conversion[col - 1]
         current_value = df.at[i, current_column]
-        previous_value = df.at[i, previous_column]
-        # check if both values for comparison are floats, then compare them
 
+        # check if both values for comparison are floats, then compare them
         if check_decreasing_conversion(current_value, col):
             rows_to_remove.append(i)
 
@@ -450,7 +450,7 @@ permutations_df = pd.DataFrame(permutations, columns=['Missing experiments deter
 # 6.5. Compare the permutations dataframe with the curated dataframe from the Excel file
 # 6.5.1. Check if the permutations are part of the existing dataframe
 #       if so, delete them from the permutations dataframe, which is later printed to the Excel file to see which
-#       experiments still need to be conducted
+#       experiments need to be conducted next
 permutations_df.drop(permutations_df[permutations_df['Missing experiments determiners'].isin(
     df['possible sample determiner-original'])].index, inplace=True)
 

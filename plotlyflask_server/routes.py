@@ -1,3 +1,4 @@
+""" This file contains the routes for the web app. """
 import os
 from flask import render_template, jsonify, redirect, request
 from flask import current_app as app

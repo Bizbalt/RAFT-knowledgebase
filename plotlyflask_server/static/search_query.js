@@ -1,8 +1,16 @@
 const url = window.location.origin + "/"
 
 
-// building the dropdown menus
-async function options_init() {
+/**
+ * Initializes the dropdown menus with options fetched from the server.
+ *
+ * This function sends a request to the server to get the dropdown options,
+ * parses the response, and populates the dropdown menus for monomer, RAFT agent,
+ * and solvent with the received options.
+ *
+ * @returns {Promise<void>} A promise that resolves when the dropdown menus are successfully populated.
+ */
+async function initializeDropdownOptions() {
     const response = await fetch(url + 'get_dropdown_options')
     const dropdown_options_dic = await response.json()
 
@@ -21,6 +29,15 @@ async function options_init() {
     }
 }
 
+/**
+ * Initializes and reformats the results table.
+ *
+ * This function searches for the table in the results div, applies Bootstrap classes,
+ * adds click event listeners to the table headers for sorting, and recolors rows with a score of 0.
+ * It also ensures the table is displayed if found.
+ *
+ * @returns {Promise} A promise that resolves when the table is successfully reformatted or rejects if no table is loaded.
+ */
 async function table_reformat_init() {
     // search for the table in the results div
     let table, rows
@@ -55,8 +72,10 @@ async function table_reformat_init() {
     }
 }
 
+// initialize the form dropdown options and the table reformatting with bootstrap.
+// Also add the event listener for the search field and prohibit illegal checkbox choices
 window.onload = function() {
-    options_init().then(() => console.log("Dropdowns initialized"))
+    initializeDropdownOptions().then(() => console.log("Dropdowns initialized"))
 
     const input_field = document.getElementById("search");
     input_field.addEventListener("keyup", ({key}) => {
@@ -66,10 +85,18 @@ window.onload = function() {
     })
     table_reformat_init().then(() => console.log("Table class reformatted"), error => console.log(error))
 
-    prohibit_illegal_checkbox_choices()
+    void prohibit_illegal_checkbox_choices()
 }
 
-// function to send a plot request to the server
+/**
+ * Sends a plot request to the server and updates the plot results.
+ *
+ * This function retrieves the experiment numbers from the search input field,
+ * gathers the selected plot options (conversion, Mn, Mw, fit curves, stacked plots),
+ * and sends a POST request to the server to generate the plot. It then displays
+ * a loading GIF while waiting for the server response, and finally updates the plot
+ * results using Plotly.
+ */
 async function plot_exp() {
     const results_div = document.getElementById("results_div_plot");
     while (results_div.firstChild) {
@@ -100,6 +127,11 @@ async function plot_exp() {
     document.getElementById("results_div_plot").scrollIntoView()
 }
 
+/**
+ * Prohibits illegal checkbox choices by enabling or disabling related checkboxes
+ * based on the current selections. It also manages the display of additional options
+ * for conversion and derivative fit checkboxes.
+ */
 async function prohibit_illegal_checkbox_choices(){
     const conv_neg_fit_checkbox = document.getElementById("fit_curve")
     const conv_neg_der_fit_checkbox = document.getElementById("fit_derivative_curve")
