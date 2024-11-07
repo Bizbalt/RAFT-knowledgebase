@@ -1,3 +1,8 @@
+""" This file provides formatting and functionality of the database to be used by the web app:
+1. formatting to a clearer form
+2. fitting of the kinetics
+3. chemical (experimenters) intuition score will be calculated. """
+
 import pandas as pd
 import numpy as np
 import re
@@ -5,16 +10,16 @@ from scipy.optimize import curve_fit
 import pickle
 import os
 
-# ToDo: add docstrings to all functions and explain what the purpose of this .py file is
-# ToDo: check whether all functions are used and if not remove them
-# isn't the function change_time_format_h changeing the time format to seconds instead of hours? --> please check
+
+# change the time format from h:m:s to h for plotting
 def change_time_format_h(time_format):
     h_m_s = str(time_format).split(":")
     h_format = int(h_m_s[0]) + (int(h_m_s[1]) + int(h_m_s[2]) / 60) / 60
     return h_format
 
 
-#  fitting functions
+# possible fitting functions and their derivatives.
+# This passage also holds deprecated ones which might be used in an update still
 def neg_growth(x, l, k):
     y = l * (1 - np.exp(k * (-x)))
     return y
@@ -25,7 +30,7 @@ def neg_growth_derivative(x, l, k):
     return y
 
 
-# as the Mn values do not all start at 0
+# as the Mn values do not all start at 0 abscissae here is an extra parameter "b"
 def neg_growth_abscissae(x, l, k, b):
     y = l * (1 - np.exp(k * (-x))) + b
     return y
@@ -35,7 +40,7 @@ def linear_growth(x, m):
     y = m * x
     return y
 
-# I do not understand the function as it seems to return the same value as the input --> please check
+
 def linear_growth_derivative(m):
     return m
 
@@ -96,7 +101,8 @@ def format_database_to_kinetics_df():
             return kinetics_df
 
     from . import sort_RAFT_table as sRt
-    # rectifying datatable(s) --> adding columns for the conversion at the times where only SEC was measured and filling them with NaN to get a better format
+    # rectify/balance the table to the same amount of conversion and mass columns for easier data manipulation
+    # (adding columns for the conversion at the times when only SEC was measured)
     sRt.df["t6h-conversion"] = np.nan
     sRt.df["t10h-conversion"] = np.nan
 
@@ -148,7 +154,7 @@ def format_database_to_kinetics_df():
     ext_time_corr_df.reset_index(drop=True, inplace=True)
     ext_time_corr_df.columns = ["Reactor", 0, 1, 2, 4, 6, 8, 10, 15]
 
-    # change time format to minutes and set ... set what? --> please check
+    # change time format to hours
     time_cols = ext_time_corr_df.columns.difference(["Reactor"])
     ext_time_corr_df[time_cols] = ext_time_corr_df[time_cols].apply(lambda x: [change_time_format_h(d) for d in x])
     ext_time_corr_df[0] = ext_time_corr_df[0].apply(lambda x: 0)
@@ -198,7 +204,9 @@ def format_database_to_kinetics_df():
         # first make sure the datapoints are in the right format and not sometimes int sometimes float
         xdata = np.array(kinetic_curve["time"].values, dtype=float)
         ydata_conv = np.array(kinetic_curve["conversion"].values, dtype=float)
-        ydata_Mn = np.array(kinetic_curve["Mn"].values, dtype=float) / 100000  # make it more comparable to conversion # Warum normierst du hier? Und hat das Auswirkungen auf die später angezeigten Daten? Wenn nicht: einfach ignorieren. :)
+
+        # make mass numbers more comparable to conversion for plotting
+        ydata_Mn = np.array(kinetic_curve["Mn"].values, dtype=float) / 100000
         ydata_Mw = np.array(kinetic_curve["Mw"].values, dtype=float) / 100000
 
         # fitting section for conversion
@@ -207,7 +215,8 @@ def format_database_to_kinetics_df():
                                           bounds=([0, -np.inf], [1, np.inf]))
         # l_fit = fit_and_exclude_outliers(x=xdata, y=ydata, fit_func=linear_growth, p0=[max(ydata)/7], bounds=([0],
         # [np.inf]))
-        # ToDo: explain what the following variables are and what they are used for
+
+        # get the fitting parameters and the covariance matrix
         popt, pcov = ng_fit["p_opt"], ng_fit["p_cov"]
         conv_time_data = np.array([ng_fit["x"], ng_fit["y"]])
         squared_error = ng_fit["sq_err"]
@@ -254,11 +263,10 @@ def format_database_to_kinetics_df():
                 kinetics_df.sort_values(by=[error_type]).iloc[quartile_ranges[q][0]:quartile_ranges[q][1]])
         return quartiles_list
 
-    # descry when a function aligns to the datapoints in a reasonable way Hence, wheneth' the blunder exaggerates,
-    # an 80% betweeneth' of the maximum conversion in that kinetic should be assessed to be the maximum conversion.
-    # let's give a point for every quartile further from the first for the single errors divided by the maximum score
-    # (that is 3*4=12)
-    #I don't understand the explanationin the four lines before --> please explain in a different way
+    # descry when a fitting function aligns to the datapoints in a reasonable way.
+    # a point for every quartile further from the first (with the greatest error) for each single error is given.
+    # lastly that score is normalized by dividing by the maximum score (that is 3*4=12)
+
     error_dic = {}
     score = np.zeros(len(kinetics_df), int)
     for error in error_list:
@@ -287,9 +295,9 @@ def format_database_to_kinetics_df():
                                    zip(kinetics_df["theo_react_end"], kinetics_df["fit_p1"], kinetics_df["fit_p2"])]
 
     # to find the optimal threshold parameters for search one has to keep in mind that with high conversion (assuming
-    # around 80%) increasing side reactions can take place. After that the reactions should be
-    # sorted after time either? than error score. Maybe a multiple-decreasing-threshold-sorting-algorithm would be good. so
-    # first priority would be sorting after nearest to 80% conversion.
+    # around 80%) increasing side reactions can take place. After conversion the reactions should be sorted after time
+    # than error score. A multiple-decreasing-threshold-sorting-algorithm would be good:
+    # So first priority would be sorting after nearest to 80% conversion.
 
     # create a score ingesting the importance of the different kinetic descriptors
     #     Conversion*1 + time²*(-0.8) + error_score*(0.5)
@@ -308,14 +316,14 @@ def format_database_to_kinetics_df():
 
     # re-involve the abortive experiments with a score of 0
     # 1st get the experiments from the discarded_df
-    # 2nd count those unique and bring them in the same shape as the kinetics_df
+    # 2nd count those (number-)unique and bring them in the same shape as the kinetics_df:
     #   translate monomer and agent numbers and letters
     #   leave conversion, time, score and so forth 0
     # 3rd append them to the kinetics_df
-    # 4th drop all duplicate from the discarded only --> why drop all the duplicates? --> please explain (because I think we took them back in (at least it looks like that in the sunburst graph in the paper))
+    # 4th drop all duplicate from the discarded only so no failed experiments will be shown twice when re-inserted:
     #   combine both, drop all duplicates for monomer, solvent, RAFT-Agent
-    #   keep the remaining exp_nr and mask with only them what should be left in the reformatted_discarded and drop the rest
-    #   finally concat the filtered_reformatted_discarded and the kinetics_df for good
+    #   keep the remaining exp_nr and mask with them what should be left in the reformatted_discarded and drop the rest
+    #   finally concat the filtered_reformatted_discarded and the kinetics_df
     reformatted_discarded = sRt.discarded_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
     # rename and reorder columns
     reformatted_discarded.columns = ["exp_nr", "monomer", "RAFT-agent", "solvent"]

@@ -1,4 +1,5 @@
 """
+Initial hard-coded data curation for the RAFT table experimenter spreadsheet
 
 Overview of data in Excel file
 
@@ -283,9 +284,8 @@ for i in range(1, len(df)):
         current_column = filtered_columns_conversion[col]
         previous_column = filtered_columns_conversion[col - 1]
         current_value = df.at[i, current_column]
-        previous_value = df.at[i, previous_column]
+
         # check if both values for comparison are floats, then compare them
-        # ToDo: Nachsehen, ob wir hier wirklich ganze Reihe entfernen oder nicht eher Spalten/Zellen @ Yannik: kannst du das bitte überprüfen und dann ggf. die Kommentare verändern?
         if check_decreasing_conversion(current_value, col):
             rows_to_remove.append(i)
 
@@ -465,4 +465,4 @@ if __name__ == '__main__':
         # to store the dataframe in specified sheet
         df.to_excel(writer, sheet_name='utilizable samples', index=False)
         discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-        #permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+        permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
