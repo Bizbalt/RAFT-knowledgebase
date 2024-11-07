@@ -182,7 +182,7 @@ class KnowledgeBase:
                 # conversion and any of Mn Mw
                 case [True, True, True] | [True, True, False] | [True, False, True]:
                     exp_fig.update_layout(
-                        yaxis_title="Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>-5</sup>",
+                        yaxis_title="Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>5</sup>",
                         overwrite=True)
                 case _:
                     pass
