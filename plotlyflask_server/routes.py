@@ -57,10 +57,10 @@ def experimenter_sheet():
     )
 
 
-@app.route("/curated_data_sheet")
-def curated_data_sheet():
+@app.route("/assorted_data_sheet")
+def assorted_data_sheet():
     return send_from_directory(
         directory=os.path.join(app.root_path, "..", "data", "kinetics_data"),
-        path="evaluation table (NMR and SEC)_curated.xlsx",
+        path="evaluation table (NMR and SEC)_assorted.xlsx",
         as_attachment=True
     )

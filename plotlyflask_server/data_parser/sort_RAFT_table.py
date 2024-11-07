@@ -72,13 +72,12 @@ import pandas as pd
 import re
 import os
 import itertools
-from datetime import datetime
 
 #######################################################
 
 # 2. Definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "data/kinetics_data/evaluation table (NMR and SEC).xlsx"
-OUTPUT_FILE_PATH = os.path.join("data/kinetics_data", "evaluation table (NMR and SEC)_curated.xlsx")
+OUTPUT_FILE_PATH = os.path.join("data/kinetics_data", "evaluation table (NMR and SEC)_assorted.xlsx")
 
 # 3. read data from Excel file to pd dataframe
 df = pd.read_excel(INPUT_FILE_PATH)  # reads Excel file to pandas dataframe
@@ -464,3 +463,8 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
     permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+
+    # also copy the abbreviations and correct times sheet to the new Excel file
+    pd.read_excel(INPUT_FILE_PATH, sheet_name="exact sampling times").to_excel(writer, sheet_name="exact sampling times", index=False)
+    pd.read_excel(INPUT_FILE_PATH, sheet_name="Legend for Abbreviations").to_excel(writer, sheet_name="Legend for Abbreviations", index=False)
+
