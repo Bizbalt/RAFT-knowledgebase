@@ -1,0 +1,15 @@
+name: RAFT_knowledgebase
+
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.3
+  - pip
+  - flask
+  - gunicorn
+  - numpy
+  - pandas
+  - openpyxl
+  - scikit-learn
+  - pip:
+      - plotly
