@@ -4,7 +4,6 @@ from flask import render_template, jsonify, redirect, request
 from flask import current_app as app
 from flask import send_from_directory
 from plotlyflask_server.data_parser.RAFT_knowledgebase import KnowledgeBase
-import json
 
 kb = KnowledgeBase()
 
