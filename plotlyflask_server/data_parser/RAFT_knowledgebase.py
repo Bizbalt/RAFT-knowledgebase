@@ -51,7 +51,8 @@ def add_fits_to_plot(figure, fit_func, fit_func_params, fit_func_derivative=None
 new_headers = {"exp_nr": "Exp. Nr.",
                "max_con": "Max. Conv. [%]",
                "theo_react_end": "Theo. React. End [h]",
-               "max_mn": "Max. Mn [10<sup>5</sup> g/mol]",
+               "max_mn": "Max. M<sub>n</sub> [10<sup>5</sup> g/mol]",
+               "mean_dispersity": "Ð",
                "monomer": "Monomer",
                "solvent": "Solvent",
                "RAFT-agent": "RAFT-agent",
@@ -225,11 +226,11 @@ class KnowledgeBase:
         # reformatting for the website-look
         search_q["exp_nr"] = search_q["exp_nr"].apply(lambda x: x.zfill(3))
         search_q["max_con"] = search_q["max_con"].apply(lambda x: x * 100)
-        # truncate the conversion reaction end and score to 2 decimal places
-        search_q[["max_con", "theo_react_end", "score"]] = search_q[["max_con", "theo_react_end", "score"]].map(
-            lambda x: round(x, 2))
+        # truncate the conversion, reaction end time, dispersity and score to 2 decimal places
+        search_q[["max_con", "theo_react_end", "mean_dispersity", "score"]] =\
+            search_q[["max_con", "theo_react_end", "mean_dispersity", "score"]].map(lambda x: round(x, 2))
         reformatted_search = search_q[
-            ["exp_nr", "max_con", "theo_react_end", "max_mn", "monomer", "RAFT-agent", "solvent", "score"]].sort_values(
+            ["exp_nr", "max_con", "theo_react_end", "max_mn", "mean_dispersity", "monomer", "RAFT-agent", "solvent", "score"]].sort_values(
             by=["score"], ascending=False)
         reformatted_search.columns = [new_headers[col] for col in reformatted_search.columns]
 

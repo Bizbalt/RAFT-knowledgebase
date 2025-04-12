@@ -30,8 +30,8 @@ def neg_growth_derivative(x, l, k):
     return y
 
 
-# as the Mn values do not all start at 0 abscissae here is an extra parameter "b"
-def neg_growth_abscissae(x, l, k, b):
+# as the Mn values do not all start at 0 abscissa here is an extra parameter "b"
+def neg_growth_abscissa(x, l, k, b):
     y = l * (1 - np.exp(k * (-x))) + b
     return y
 
@@ -117,11 +117,14 @@ def format_database_to_kinetics_df():
     # get all the Mn and Mw headers
     Mn_list = []
     Mw_list = []
+    pdi_list = []
     for column in sRt.df.columns:
         if "Mn" in column:
             Mn_list.append(column)
         if "Mw" in column:
             Mw_list.append(column)
+        if "Ð" in column:
+            pdi_list.append(column)
 
     # creating a table as a lookup to correct all sample measurement times
 
@@ -179,8 +182,7 @@ def format_database_to_kinetics_df():
                                                    "conversion": polymerisation_kinetic[conversion_list].values,
                                                    "Mn": polymerisation_kinetic[Mn_list].values,
                                                    "Mw": polymerisation_kinetic[Mw_list].values,
-                                                   # , "reactor" : polymerisation_kinetic["reactor"] reactor is not
-                                                   # needed since the time is corrected
+                                                   "dispersity": polymerisation_kinetic[pdi_list].values
                                                    })
 
         kinetic_curve_entries["exp_nr"] = polymerisation_kinetic["Experiment number"]
@@ -198,16 +200,19 @@ def format_database_to_kinetics_df():
     kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'max_mn', 'monomer',
                                         'RAFT-agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
                                         'p1_p2_covariance', 'p2_variance', 'squared_error', 'conv_time_data',
-                                        'Mn_time_data', 'Mw_time_data'])  # create new dataframe with kinetics per row
+                                        'Mn_time_data', 'Mw_time_data',
+                                        'dispersity_time_data'])  # create new dataframe with kinetics per row
 
     for idx, kinetic_curve in enumerate(kinetic_curves):
         # first make sure the datapoints are in the right format and not sometimes int sometimes float
         xdata = np.array(kinetic_curve["time"].values, dtype=float)
         ydata_conv = np.array(kinetic_curve["conversion"].values, dtype=float)
+        ydata_dispersity = np.array(kinetic_curve["dispersity"].values, dtype=float)
 
         # make mass numbers more comparable to conversion for plotting
         ydata_Mn = np.array(kinetic_curve["Mn"].values, dtype=float) / 100000
         ydata_Mw = np.array(kinetic_curve["Mw"].values, dtype=float) / 100000
+
 
         # fitting section for conversion
         p_initial = [max(ydata_conv), 0.1]  # this is a mandatory initial guess
@@ -224,16 +229,20 @@ def format_database_to_kinetics_df():
         # fitting section for Mn
         max_Mn = max(ydata_Mn[~np.isnan(ydata_Mn)])
         p_initial = [max_Mn, 0.1, 0]
-        ng_fit_Mn = fit_and_exclude_outliers(x=xdata, y=ydata_Mn, fit_func=neg_growth_abscissae, p0=p_initial,
+        ng_fit_Mn = fit_and_exclude_outliers(x=xdata, y=ydata_Mn, fit_func=neg_growth_abscissa, p0=p_initial,
                                              bounds=([0, -np.inf, -np.inf], [1, np.inf, np.inf]))
 
         Mn_time_data = np.array([ng_fit_Mn["x"], ng_fit_Mn["y"]])
 
         # fitting section for Mw
-        ng_fit_Mw = fit_and_exclude_outliers(x=xdata, y=ydata_Mw, fit_func=neg_growth_abscissae, p0=p_initial,
+        ng_fit_Mw = fit_and_exclude_outliers(x=xdata, y=ydata_Mw, fit_func=neg_growth_abscissa, p0=p_initial,
                                              bounds=([0, -np.inf, -np.inf], [1, np.inf, np.inf]))
 
         Mw_time_data = np.array([ng_fit_Mw["x"], ng_fit_Mw["y"]])
+
+        # combining dispersity with times omitting Nan
+        nan_val_in_d_mask = ~np.isnan(ydata_dispersity)
+        dispersity_time_data = np.array([xdata[nan_val_in_d_mask], ydata_dispersity[nan_val_in_d_mask]])
 
         kinetics_df.loc[idx] = {"exp_nr": str(kinetic_curve["exp_nr"].iloc[1]), "max_con": max(ydata_conv),
                                 "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
@@ -244,7 +253,8 @@ def format_database_to_kinetics_df():
                                 "fit_p1": popt[0], "fit_p2": popt[1],
                                 "p1_variance": pcov[0][0], "p1_p2_covariance": pcov[0][1], "p2_variance": pcov[1][1],
                                 "squared_error": squared_error, "conv_time_data": conv_time_data,
-                                "Mn_time_data": Mn_time_data, "Mw_time_data": Mw_time_data}
+                                "Mn_time_data": Mn_time_data, "Mw_time_data": Mw_time_data,
+                                "dispersity_time_data": dispersity_time_data}
 
     kinetics_df.reset_index(drop=True, inplace=True)
     kinetics_df.drop(axis="index", index=kinetics_df[kinetics_df["max_con"] <= 0].index, inplace=True)
@@ -294,13 +304,17 @@ def format_database_to_kinetics_df():
     kinetics_df["theo_max_con"] = [neg_growth(x, p1, p2) for x, p1, p2 in
                                    zip(kinetics_df["theo_react_end"], kinetics_df["fit_p1"], kinetics_df["fit_p2"])]
 
+    # find the mean dispersity of the last 3 values (there are always at least 4),
+    # as the first low molar weights are usually too uncertain due to SEC sensitivity for small oligomers
+    kinetics_df["mean_dispersity"] = kinetics_df["dispersity_time_data"].apply(lambda x: np.mean(x[1][-3:]))
+
     # to find the optimal threshold parameters for search one has to keep in mind that with high conversion (assuming
-    # around 80%) increasing side reactions can take place. After conversion the reactions should be sorted after time
-    # than error score. A multiple-decreasing-threshold-sorting-algorithm would be good:
+    # around 80%) increasing side reactions can take place. After conversion the reactions should be sorted after time,
+    # then error score and lastly polymer dispersity. A multiple-decreasing-threshold-sorting-algorithm would be good:
     # So first priority would be sorting after nearest to 80% conversion.
 
     # create a score ingesting the importance of the different kinetic descriptors
-    #     Conversion*1 + time²*(-0.8) + error_score*(0.5)
+    #     Conversion*1 + time²*(-0.8) + error_score*(0.5) + dispersity*(0.3)
     #     while spanning between the optimum and the least bearable values like in the following:
     #          Conversion: |con-0.8| - 0 (0.8 is the optimum)
     #             using a linear decreasing function -x*m+b
@@ -308,10 +322,15 @@ def format_database_to_kinetics_df():
     #             using a negative potential function -x**2+b
     #          Error: 0 - 12 (0 is the optimum) (the error is more negligible)
     #             using a linear decreasing function -x*m+b
+    #          Dispersity: 1 is the optimum, at 1.5 half the score should be lost. The further, the less impact.
+    #             using a reciprocal function 1/(2x-1)
+
     score = []
     for row in kinetics_df.itertuples():
-        score.append(((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 30) ** 2 + 1) * 0.8 + (
-                (12 - row.error_score) / 12) * 0.5))
+        row_score = ((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 30) ** 2 + 1) * 0.8 + (
+                    (12 - row.error_score) / 12) * 0.5) + (1 / (2 * row.mean_dispersity - 1) * 0.3)
+        normalized_row_score = row_score / (1 + 0.8 + 0.5 + 0.3)
+        score.append(normalized_row_score)
     kinetics_df["score"] = score
 
     # re-involve the abortive experiments with a score of 0
