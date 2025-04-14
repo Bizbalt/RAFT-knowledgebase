@@ -34,12 +34,6 @@ def get_dropdown_options():
     return jsonify(kb.dropdown_options)
 
 
-@app.route("/test_site")
-def test_site():
-    return render_template(
-        "test_site.html", figure=kb.plot_exp(["241", "145", "343"], True, True).to_html(full_html=False))
-
-
 @app.route("/plot_exp", methods=["POST"])
 def plot_exp():
     # create dictionary from json object
