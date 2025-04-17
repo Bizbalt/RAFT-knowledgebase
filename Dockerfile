@@ -31,5 +31,5 @@ CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:8000", "wsgi:app"]
 #   docker run -p 8000:8000 raftkb
 
 # Run docker with limitations suitable for Ionos XS VPS
-#   docker run -p 8000:8000 --memory="1g" --cpus="1" raftkb
+#   docker run -p 8000:8000 --memory="512m" --cpus="0.5" raftkb
 # https://mein.ionos.de/server-configuration/?skipContractSelection=true&skipDomainCheck=true&cmsIdentifier=tariff-core-vps-linux-xs
