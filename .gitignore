@@ -374,5 +374,5 @@ FodyWeavers.xsd
 /raft-knowledge-base-website/data/kinetics_data/kinetics_df.pkl
 /iframe_figures/
 /raft-knowledge-base-website/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
-/ionos-updater/data/
+/ionos-updater/data/*
 /raft-knowledge-base-website/iframe_figures/
