@@ -365,12 +365,14 @@ FodyWeavers.xsd
 /.idea/other.xml
 
 # User-specific files
-/data/data exploration figures/
-/plotlyflask_server/data_parser/kinetics_data/kinetics_df.pkl
+/raft-knowledge-base-website/data/data exploration figures/
+/raft-knowledge-base-website/plotlyflask_server/data_parser/kinetics_data/kinetics_df.pkl
 
 # Jupyter Notebook checkpoints
 /.ipynb_checkpoints/dataset_analysis-checkpoint.ipynb
 /sort_RAFT_table.pyproj
-/data/kinetics_data/kinetics_df.pkl
+/raft-knowledge-base-website/data/kinetics_data/kinetics_df.pkl
 /iframe_figures/
-/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
+/raft-knowledge-base-website/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
+/ionos-updater/data/
+/raft-knowledge-base-website/iframe_figures/

@@ -1,0 +1,11 @@
+# Exclude README.md
+README.md
+
+# Exclude hidden files or folders in general
+.*
+
+# Ignore developement files
+dataset_analysis.ipynb
+iframe_figures
+example_env.yaml
+data/data exploration figures

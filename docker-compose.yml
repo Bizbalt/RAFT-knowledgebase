@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  raftkb-flask-server:
+    build: ./raft-knowledge-base-website
+    container_name: flask-app
+    restart: unless-stopped
+    networks:
+      - web
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 500m
+        reservations:
+          memory: 256m
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - web
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: 100m
+        reservations:
+          memory: 64m
+
+  ionos-updater:
+    build: ./ionos-updater
+    container_name: ionos-updater
+    volumes:
+      - ./ionos-updater/data:/data
+    restart: unless-stopped
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge

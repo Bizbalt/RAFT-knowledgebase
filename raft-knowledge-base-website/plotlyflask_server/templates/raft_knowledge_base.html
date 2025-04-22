@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>RAFT Knowledge Base</title>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="../static/search_query.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="../static/raft_knowledgebase.css"/>
+    <script type="text/javascript" src="../static/sort_table.js"></script>
+    <script type="text/javascript" src="../static/scrollToTop.js"></script>
+</head>
+
+<body>
+    <h1>RAFT Knowledge Base</h1>
+
+    <p style="font-size: large">
+        This knowledge base aims to inform about the underlying database of kinetics and how to access this intel. If you want to polymerize a certain monomer, choose it (or multiple with ctrl) from the dropdown list and refine your search with the available options for RAFT Agent, solvent, etc. if you like.
+        If you want to achieve a specific mass, choose the one or multiple desired experiments and plot their kinetic plots by using the search bar to look for a certain molar mass-time-points.
+        <a href="https://www.google.com">Link to Paper</a> and <a href="https://github.com/MichaelRingleb/sort_RAFT_table/tree/master">Link to Code repository</a>.
+
+        Downloads:
+        <a href="{{ url_for('experimenter_sheet') }}">experimenter sheet.xlsx</a>,
+        <a href="{{ url_for('assorted_data_sheet') }}">assorted experimenter sheet.xlsx</a>
+
+    </p>
+
+    <form action="" method="POST">
+      <label for="monomer">Monomers: </label><select name="monomer" id="monomer" multiple size="8">
+        <option value="" selected="selected">any</option>
+    </select>
+
+        <label for="raft_agent">RAFT-agents: </label><select name="raft_agent" id="raft_agent" multiple size="8">
+        <option value="" selected="selected">any</option>
+    </select>
+
+        <label for="solvent">Solvents: </label><select name="solvent" id="solvent" multiple size="8">
+        <option value="" selected="selected">any</option>
+    </select>
+
+    <input class="btn btn-primary" type="submit" value="Search">
+    </form>
+    <div class="prior search" id="prior_search" style="color:darkgray">
+        Prior search: {{ prior_search }} <br>
+        @70 °C under N2 with 0.875 mol AIBN and 3.35 mol RAFT-Agent per mol monomer
+    </div>
+
+    <div class="results" id="results_div_table" style="display: none; max-height: 600px; overflow: auto;">
+         &#x2195 Sort by column when clicking on the header.
+    {{ dataframe | safe }}
+    </div>
+    <br>
+    <div class="mb-3">
+        <label for="search" class="col-form-label">Input experiment numbers and</label>
+        <button class="btn btn-primary" onclick="plot_exp()">Plot</button>
+        <label for="search" class="col-form-label">(you can select multiple by clicking with ctrl and copying) </label>
+        <input class="form-control" type="text" id="search" placeholder="e.g. &quot;469 137 226&quot;" autocomplete="experiment_search">
+    </div>
+
+    <div style="display: inline-flex;">
+        <div>
+            <input class="form-check-input" type="checkbox" id="conv" name="plot options" checked="checked" />
+            <label for="conv">Plot conversion</label>
+
+            <input class="form-check-input" type="checkbox" id="mn" name="plot options" />
+            <label for="mn">Plot Mn</label>
+
+            <input class="form-check-input" type="checkbox" id="mw" name="plot options" />
+            <label for="mw">Plot Mw</label>
+        </div>
+        <div id="conv_options">
+            &nbsp; || For conversion:
+            <input class="form-check-input" type="checkbox" id="fit_curve" name="plot options" />
+            <label for="fit_curve">Fit curve</label>
+            <input class="form-check-input" type="checkbox" id="fit_derivative_curve" name="plot options" disabled="disabled" />
+            <label for="fit_derivative_curve">Fit derivative of fit curve</label>
+        </div>
+        <div id="stack_options">
+            &nbsp;||&nbsp;
+            <input class="form-check-input" type="checkbox" id="stacked_plots" name="plot options" disabled="disabled" />
+            <label for="stacked_plots">Plot stacked</label>
+        </div>
+    </div>
+
+    <div class="results" id="results_div_plot"></div>
+
+    <button type="button" class="btn btn-primary btn-lg btn-totop" onclick="topFunction()" id="totop" title="Go to top">Top</button>
+    <footer style="position: fixed; bottom: 10px; right: 10px; text-align: right;">
+        <a href="impressum.html">Impressum</a>
+    </footer>
+</body>
