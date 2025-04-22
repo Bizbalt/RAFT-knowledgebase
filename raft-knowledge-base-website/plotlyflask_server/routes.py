@@ -13,12 +13,7 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, "static"), "chart_curve.ico", mimetype='image/vnd.microsoft.icon')
 
 
-@app.route("/")
-def home():
-    return redirect("/raft_knowledge_base")
-
-
-@app.route("/raft_knowledge_base", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def intro_page():
     if request.method == "POST":
         query = request.form.to_dict(flat=False)
@@ -57,3 +52,8 @@ def assorted_data_sheet():
         path="evaluation table (NMR and SEC)_assorted.xlsx",
         as_attachment=True
     )
+
+
+@app.route('/impressum')
+def impressum():
+    return render_template('impressum.html')
