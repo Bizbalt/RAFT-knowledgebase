@@ -12,6 +12,11 @@ services:
           memory: 500m
         reservations:
           memory: 256m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:alpine
@@ -32,6 +37,11 @@ services:
           memory: 100m
         reservations:
           memory: 64m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   ionos-updater:
     build: ./ionos-updater
@@ -41,6 +51,11 @@ services:
     restart: unless-stopped
     networks:
       - web
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   web:
