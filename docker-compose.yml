@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   raftkb-flask-server:
     build: ./raft-knowledge-base-website
