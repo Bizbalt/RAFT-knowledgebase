@@ -373,9 +373,11 @@ FodyWeavers.xsd
 /.ipynb_checkpoints/dataset_analysis-checkpoint.ipynb
 /sort_RAFT_table.pyproj
 
-# generated files during runtime
+# generated files during runtime and during runtime dockerless local
 /raft-knowledge-base-website/data/kinetics_data/kinetics_df.pkl
 /raft-knowledge-base-website/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
+/data/kinetics_data/kinetics_df.pkl
+/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
 
 # api-keys and secrets
 /ionos-updater/data/*
