@@ -142,7 +142,7 @@ class KnowledgeBase:
                                          marker=marker_dict, legendgroup=str(kinetic_to_plot.exp_nr), showlegend=False,
                                          col=1, row=1)
                 if stacked_plots:
-                    exp_fig.update_yaxes(title_text="Conv [%]", row=stack_amount, col=1)
+                    exp_fig.update_yaxes(title_text="Conversion", row=stack_amount, col=1)
                     stack_amount += 1
 
             if plot_mn:
@@ -174,7 +174,7 @@ class KnowledgeBase:
                 # conversion only
                 case [True, False, False]:
                     exp_fig.update_layout(
-                        yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion [%]")
+                        yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion")
                 # any of Mn Mw
                 case [False, True, True] | [False, False, True] | [False, True, False]:
                     exp_fig.update_layout(
@@ -183,7 +183,7 @@ class KnowledgeBase:
                 # conversion and any of Mn Mw
                 case [True, True, True] | [True, True, False] | [True, False, True]:
                     exp_fig.update_layout(
-                        yaxis_title="Conversion [%] and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>5</sup>",
+                        yaxis_title="Conversion and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>5</sup>",
                         overwrite=True)
                 case _:
                     pass
