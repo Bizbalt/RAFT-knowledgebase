@@ -42,9 +42,10 @@
 
     <input class="btn btn-primary" type="submit" value="Search">
     </form>
-    <div class="prior search" id="prior_search" style="color:darkgray">
+    <div class="prior search" id="prior_search" style="color:darkgray; font-size: small">
         Prior search: {{ prior_search }} <br>
-        @70 °C under N2 with 6.7 mmol AIBN and 1.67 mmol RAFT-Agent per mol monomer
+        @70 °C under N2 with 6.7 mmol AIBN and 1.67 mmol RAFT-Agent per mol monomer <br>
+        The reactions are not optimised. Other reactants that cannot be selected here and changes to the basic parameters such as temperature, initiator/monomer ratio, etc. can have a major impact.
     </div>
 
     <div class="results" id="results_div_table" style="display: none; max-height: 600px; overflow: auto;">
