@@ -169,7 +169,7 @@ def format_database_to_kinetics_df():
     # reagents that made out the "determiner"
     reaction_descriptors_dict = {}
     abbreviation_keys = pd.read_excel(sRt.INPUT_FILE_PATH, sheet_name="Legend for Abbreviations")
-    abbreviation_keys.dropna(inplace=True)
+    abbreviation_keys.dropna(how="all", inplace=True)
     for row in abbreviation_keys.itertuples():
         reaction_descriptors_dict[str(row.Symbol)] = row.Name
 
