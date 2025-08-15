@@ -424,6 +424,10 @@ discarded_df.reset_index(drop=True, inplace=True)
 df.drop(rows_to_remove, inplace=True)
 df.reset_index(drop=True, inplace=True)
 
+# 5.4. Removing al set-up related rows from the discarded dataframe
+setup_related_criteria = ["use-data-for-AI=0", "underfilled", "precipitate", "less than 4 full data points in data set"]
+discarded_df = discarded_df[~discarded_df['discarding criterion'].isin(setup_related_criteria)]
+
 ###################################################################
 
 # 6. check which data is still missing to have performed at least each experiment once
