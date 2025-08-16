@@ -17,18 +17,29 @@ function sort_table_style(column_number) { // bootstrap preserving O(n^2) sort
       shouldSwitch = false;
       /* Get the two elements you want to compare,
       one from current row and one from the next: */
-      x = rows[i].getElementsByTagName("TD")[column_number];
-      y = rows[i + 1].getElementsByTagName("TD")[column_number];
+      x = rows[i].getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
+      y = rows[i + 1].getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
+
+      // Handle "NaN" to always be last
+      if (x === "nan" && y !== "nan") {
+        shouldSwitch = true;
+        break;
+      }
+      if (y === "nan" && x !== "nan") {
+        shouldSwitch = false;
+        continue;
+      }
+
       /* Check if the two rows should switch place,
       based on the direction, asc or desc: */
-      if (dir == "asc") {
-        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+      if (dir === "asc") {
+        if (x > y) {
           // If so, mark as a switch and break the loop:
           shouldSwitch = true;
           break;
         }
-      } else if (dir == "desc") {
-        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+      } else if (dir === "desc") {
+        if (x < y) {
           // If so, mark as a switch and break the loop:
           shouldSwitch = true;
           break;
@@ -45,7 +56,7 @@ function sort_table_style(column_number) { // bootstrap preserving O(n^2) sort
     } else {
       /* If no switching has been done AND the direction is "asc",
       set the direction to "desc" and run the while loop again. */
-      if (switchcount == 0 && dir == "asc") {
+      if (switchcount === 0 && dir === "asc") {
         dir = "desc";
         switching = true;
       }
@@ -61,6 +72,10 @@ function sort_table_fast(column_number) { // fast O (n*log(n)) sort
   rows.sort((a, b) => {
     let x = a.getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
     let y = b.getElementsByTagName("TD")[column_number].innerHTML.toLowerCase();
+
+    // Handle "NaN" to always be last
+    if (x === "nan") return 1;
+    if (y === "nan") return -1;
 
     if (x < y) return dir === "asc" ? -1 : 1;
     if (x > y) return dir === "asc" ? 1 : -1;

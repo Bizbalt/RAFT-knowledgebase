@@ -229,6 +229,10 @@ class KnowledgeBase:
         # truncate the conversion, reaction end time, dispersity and score to 2 decimal places
         search_q[["max_con", "theo_react_end", "mean_dispersity", "score"]] =\
             search_q[["max_con", "theo_react_end", "mean_dispersity", "score"]].map(lambda x: round(x, 2))
+        # zfill the max conversion to 6 places and the reaction end time to 5
+        search_q["max_con"] = search_q["max_con"].apply(lambda x: f"{x:.2f}".zfill(6) if not np.isnan(x) else x)
+        search_q["theo_react_end"] = search_q["theo_react_end"].apply(lambda x: f"{x:.2f}".zfill(5) if not np.isnan(x) else x)
+
         reformatted_search = search_q[
             ["exp_nr", "max_con", "theo_react_end", "max_mn", "mean_dispersity", "monomer", "RAFT-agent", "solvent", "score"]].sort_values(
             by=["score"], ascending=False)
