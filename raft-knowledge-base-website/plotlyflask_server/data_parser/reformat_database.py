@@ -334,32 +334,32 @@ def format_database_to_kinetics_df():
     kinetics_df["score"] = score
 
     # re-involve the abortive experiments with a score of 0
-    # 1st get the experiments from the discarded_df
+    # 1st get the experiments from the failed_df
     # 2nd count those (number-)unique and bring them in the same shape as the kinetics_df:
     #   translate monomer and agent numbers and letters
     #   leave conversion, time, score and so forth 0
     # 3rd append them to the kinetics_df
-    # 4th drop all duplicate from the discarded only so no failed experiments will be shown twice when re-inserted:
+    # 4th drop all duplicate from the failed only so no failed experiments will be shown twice when re-inserted:
     #   combine both, drop all duplicates for monomer, solvent, RAFT-Agent
-    #   keep the remaining exp_nr and mask with them what should be left in the reformatted_discarded and drop the rest
-    #   finally concat the filtered_reformatted_discarded and the kinetics_df
-    reformatted_discarded = sRt.discarded_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
+    #   keep the remaining exp_nr and mask with them what should be left in the reformatted_failed and drop the rest
+    #   finally concat the filtered_reformatted_failed and the kinetics_df
+    reformatted_failed = sRt.failed_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
     # rename and reorder columns
-    reformatted_discarded.columns = ["exp_nr", "monomer", "RAFT-agent", "solvent"]
-    reformatted_discarded["exp_nr"] = reformatted_discarded["exp_nr"].astype(str)
+    reformatted_failed.columns = ["exp_nr", "monomer", "RAFT-agent", "solvent"]
+    reformatted_failed["exp_nr"] = reformatted_failed["exp_nr"].astype(str)
     mapables = ["monomer", "RAFT-agent", "solvent"]
-    reformatted_discarded[mapables] = reformatted_discarded[mapables].map(lambda x: reaction_descriptors_dict[x])
-    reformatted_discarded["score"] = 0
+    reformatted_failed[mapables] = reformatted_failed[mapables].map(lambda x: reaction_descriptors_dict[x])
+    reformatted_failed["score"] = 0
 
-    # this series withholds all the exp numbers that should still be present in the discarded set
+    # this series withholds all the exp numbers that should still be present in the failed set
     exp_nr_to_keep = pd.concat([kinetics_df,
-                                reformatted_discarded.drop_duplicates(
+                                reformatted_failed.drop_duplicates(
                                     subset=["monomer", "RAFT-agent", "solvent"], keep="first")]).drop_duplicates(
                                     subset=["monomer", "RAFT-agent", "solvent"], keep=False)["exp_nr"]
 
     # create a mask
-    reform_to_keep = reformatted_discarded["exp_nr"].isin(exp_nr_to_keep)
-    kinetics_df = pd.concat([kinetics_df, reformatted_discarded[reform_to_keep]])
+    reform_to_keep = reformatted_failed["exp_nr"].isin(exp_nr_to_keep)
+    kinetics_df = pd.concat([kinetics_df, reformatted_failed[reform_to_keep]])
 
     # pickle dataframe for reload on no change and overwrite prior file
     kinetics_df.to_pickle(pickle_path)

@@ -424,9 +424,10 @@ discarded_df.reset_index(drop=True, inplace=True)
 df.drop(rows_to_remove, inplace=True)
 df.reset_index(drop=True, inplace=True)
 
-# 5.4. Removing al set-up related rows from the discarded dataframe
+# 5.4. Removing al non set-up related rows from the discarded dataframe and add them to a new failed dataframe
 setup_related_criteria = ["use-data-for-AI=0", "underfilled", "precipitate", "less than 4 full data points in data set"]
-discarded_df = discarded_df[~discarded_df['discarding criterion'].isin(setup_related_criteria)]
+failed_df = discarded_df[~discarded_df['discarding criterion'].isin(setup_related_criteria)].copy()
+discarded_df = discarded_df[discarded_df['discarding criterion'].isin(setup_related_criteria)]
 
 ###################################################################
 
@@ -465,6 +466,7 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
     # use to_Excel function and specify the sheet_name and index
     # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
+    failed_df.to_excel(writer, sheet_name='failed samples', index=False)
     discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
     permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
 
