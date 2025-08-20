@@ -365,7 +365,7 @@ FodyWeavers.xsd
 /.idea/other.xml
 
 # User-specific files
-/data/data exploration figures/
+/raft-knowledge-base-website/data/data exploration figures/
 /iframe_figures/
 /raft-knowledge-base-website/iframe_figures/
 
@@ -376,8 +376,6 @@ FodyWeavers.xsd
 # generated files during runtime and during runtime dockerless local
 /raft-knowledge-base-website/data/kinetics_data/kinetics_df.pkl
 /raft-knowledge-base-website/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
-/data/kinetics_data/kinetics_df.pkl
-/data/kinetics_data/evaluation table (NMR and SEC)_assorted.xlsx
 
 # api-keys and secrets
 /ionos-updater/data/*
