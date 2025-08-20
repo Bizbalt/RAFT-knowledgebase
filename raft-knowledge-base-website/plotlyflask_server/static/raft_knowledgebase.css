@@ -12,10 +12,20 @@ body {
   display: none;
   opacity: 0; /* Hidden by default */
   position: fixed; /* Fixed/sticky position */
-  bottom: 20px; /* Place the button at the bottom of the page */
+  bottom: 0.5rem; /* Place the button at the bottom of the page */
   z-index: 99; /* Make sure its on top */
-  width: 95%; /* have 2,5% margin on each side */
+  width: 80%; /* have 2,5% margin on each side */
+  right: 8rem; /* padding for the impressum link */
+  font-size: 1rem;
 }
+
+.btn-primary {
+  padding-top: 0;
+  border-top-style: solid;
+  border-top-width: 0;
+  height: 26px;
+}
+
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
   /* line-height: 1.2; */
 }
@@ -38,3 +48,12 @@ body {
 input[type=checkbox][disabled] {
   background-color: #ff5f5f;
 }
+
+@media (max-width: 720px) { /* place the totop button as a small version on the side on mobile devices */
+    .btn-totop {
+        left: 20px; /* Fix the button on the right side */
+        width: 75px; /* Smaller width for mobile */
+    }
+}
+
+
