@@ -292,7 +292,7 @@ rows_to_remove = []  # list of rows which should be removed
 # remove rows with conversion below 0
 for idx, row in df.iterrows():
     row_values = [row[filtered_col_conv] for filtered_col_conv in conversion_columns]
-    if np.average(row_values) < 0.01:
+    if np.average(np.array(row_values)[~np.isnan(row_values)]) < 0.01:
         if idx not in rows_to_remove:
             rows_to_remove.append(idx)
 move_to_unsuccessful(df, rows_to_remove, 'low average conversion (below 1%)')
