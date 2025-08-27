@@ -155,20 +155,20 @@ df.columns = [x.strip() for x in df.columns]
 # 5. curation criteria
 """
 5.1 kinetics are removed when
-.1 a reactor lost more than 20 % of fluid
-.2 precipitation
-.3 phase separation
-.4 gelation
+5.1.1 a reactor lost more than 20 % of fluid
+5.1.2 precipitation
+5.1.3 phase separation
+5.1.4 gelation
 
 5.2 Data points are set to NaN
-.1 mn mw that are out of calibration are replaced with NaN
-.2 conversions below -0.05 are set NaN
+5.2.1 mn mw that are out of calibration are replaced with NaN
+5.2.2 conversions below -0.05 are set NaN
 
 5.3 further kinetics are removed in case of 
-.1 less than 4 datapoints
-.2 conversion average under 1%
-.3 conversions are decreasing more than 10%
-.4 Mn/Mw are decreasing more than 10%
+5.3.1 less than 4 datapoints
+5.3.2 conversion average under 1%
+5.3.3 conversions are decreasing more than 10%
+5.3.4 Mn/Mw are decreasing more than 10%
 """
 # all rows / kinetics that do not fulfill the criteria for a good reaction are removed
 # from the dataframe and collected in an "unsuccessful" dataframe with the reason for removal
