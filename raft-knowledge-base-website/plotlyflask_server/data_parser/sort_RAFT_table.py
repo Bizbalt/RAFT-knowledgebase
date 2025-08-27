@@ -60,12 +60,10 @@ column 88(from row 3): precipitate in reactor (0,1 --> False or True)
 # column 89(from row 3): "hood" on top of reactor (phase separation) (0,1 --> False or True)
 column 90(from row 3): content of reactor gelated (bulk, not hood or precipitate)
  (0,1,2 --> 0 = no, 1 = slightly/partly, 2 = fully))
-column 91(from row 3): use data for AI (0,1 --> False or True)
- (if empty, the decision should be made by this programme)
 
 """
 
-# 1. Import statements
+# 1. import statements
 
 import numpy as np
 import pandas as pd
@@ -75,7 +73,7 @@ import itertools
 
 #######################################################
 
-# 2. Definition of the input and output file path for the Excel documents
+# 2. definition of the input and output file path for the Excel documents
 INPUT_FILE_PATH = "data/kinetics_data/evaluation table (NMR and SEC).xlsx"
 OUTPUT_FILE_PATH = os.path.join("data/kinetics_data", "evaluation table (NMR and SEC)_assorted.xlsx")
 
@@ -85,28 +83,26 @@ df = pd.read_excel(INPUT_FILE_PATH)  # reads Excel file to pandas dataframe
 #######################################################
 
 # 4. restructure the dataframe
-# 4.1. Basic changes
+# 4.1. remove empty rows and descriptive preamble columns and rows
 df.dropna(inplace=True, how="all")  # drop all completely empty rows
 df = df.drop(df.columns[0], axis=1)  # drop first column (legend in the Excel file)
 df.reset_index(drop=True, inplace=True)  # reset index after row removing
 
-# 4.2. change header of dataframe to more readable names
-#  (recently in header only t0h, t1h, t2h, etc. or unnamed)-->(e.g., t0h-Mn)
-
-# 4.2.1. replace header (first row in original document contained only information about time of sampling)
-#  with the second row (information about the data in the column (without time of sampling)))
+# first row in original document contained only information about time of sampling
+# replace header: drop first dataframe row and take it as the header (second row in xlsx sheet)
 new_header = df.iloc[0]  # grab the first row for the header
 df = df[1:]  # remove header row from the dataframe
 df.columns = new_header  # set data from the initial first row as header
+
+# 4.2. replace column names of dataframe to unique names, asserted by the time of sampling
+#  (Mn, Mn, ... or unnamed)-->(t0h-Mn, t1h-Mn, ...)
 df.columns = df.columns.map(lambda x: re.sub(r'\n', '', x))  # remove all line breaks in column names
 
-# 4.2.2. add information about time to the header (e.g. t0h-Mn)
 times_list = ["t0h", "t1h", "t2h", "t4h", "t6h", "t8h", "t10h", "t15h"]  # list of all times of sampling
 new_col_names = []
 times_list_idx = 0
 
-# 4.2.2.1 iterate over all column names
-for col in df:
+for col in df:  # iterate over all column names
     # If none of the keywords is found in the column name, change the column name and append it to the new column
     #  names list
     if not any(keyword in col for keyword in
@@ -127,31 +123,27 @@ for col in df:
     else:
         new_col_names.append(col)
 
-        # 4.2.2.2 Rename all columns with the new column names
+# Rename all columns with the new column names
 df.columns = new_col_names
 
-# 4.3. split first column (sample determiner) into 4 columns (batch(prior experiment determiner), RAFT-Agent, monomer,
+# 4.3. Annotate all kinetics with assertive descriptives
+# split first column (sample determiner) into 4 columns (batch(prior experiment determiner), RAFT-Agent, monomer,
 # solvent) but keep the first column (sample determiner) in the dataframe 4.3.1. drop all rows with empty first
 # column ('sample determiner')
 df = df.dropna(subset=[df.columns[0]], how='all')
-# 4.3.2. split the first column into 7 columns, rename the columns, add them to the dataframe
+# 4.3.1. split the first column into 7 columns, rename the columns, add them to the dataframe
 #  (and drop the first column (sample determiner))
 split_data = df['sample determiner'].str.split('-', expand=True)
 split_data.columns = ['Abbreviation', 'experiment number', 'experiment subnumber', 'batch', 'monomer',
                       'RAFT-Agent', 'solvent']
 df = pd.concat([split_data, df], axis=1, sort=False)
 
-# 4.3.3. add a new column (experiment number) to the dataframe (combination of abbreviation, experiment number
-#  and experiment sub number), move it to the first column and drop the columns (abbreviation, experiment number,
-#   experiment sub number)
-df['Experiment number'] = df['Abbreviation'].str.cat([df['experiment number'], df['experiment subnumber']], sep='-')
+# 4.3.2 Annotate rows/kinetics with unique experiment number identifier
+df["Experiment number"] = range(1, len(df) + 1)
 df = df[['Experiment number'] + [col for col in df.columns if col != 'Experiment number']]  # reorder columns
 df = df.drop(columns=['Abbreviation', 'experiment number', 'experiment subnumber'])
 
-#  The experiment number is not a unique identifier and therefore obsolete
-df["Experiment number"] = range(1, len(df) + 1)
-
-# 4.3.4. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent
+# 4.3.3. add new column for later comparison with all possible permutations (combination of monomer, RAFT-Agent
 #  and solvent)
 df['possible sample determiner-original'] = df['monomer'].str.cat([df['RAFT-Agent'], df['solvent']], sep='-')
 
@@ -161,64 +153,83 @@ df.columns = [x.strip() for x in df.columns]
 ###################################################################
 
 # 5. curation criteria
+"""
+5.1 kinetics are removed when
+.1 a reactor lost more than 20 % of fluid
+.2 precipitation
+.3 phase separation
+.4 gelation
+
+5.2 Data points are set to NaN
+.1 mn mw that are out of calibration are replaced with NaN
+.2 conversions below -0.05 are set NaN
+
+5.3 further kinetics are removed in case of 
+.1 less than 4 datapoints
+.2 conversion average under 1%
+.3 conversions are decreasing more than 10%
+.4 Mn/Mw are decreasing more than 10%
+"""
+# all rows / kinetics that do not fulfill the criteria for a good reaction are removed
+# from the dataframe and collected in an "unsuccessful" dataframe with the reason for removal
+unsuccessful_df = pd.DataFrame()  # create empty dataframe for unsuccessful experiments
+NMR_method_accuracy = 0.05  # NMR method accuracy for the intensity is +-5%
+M_SEC_err = 100000 * 0.10  # the SEC measures up to  100000 g/mol. The error of Mn/Mw is +-10%.
+
+
+def move_to_unsuccessful(_df, _rows, _reason):
+    """Move specified rows from the main dataframe to the unsuccessful dataframe with a given reason."""
+    global unsuccessful_df
+    discarded = _df.loc[_rows].copy()
+    discarded['discarding criterion'] = _reason
+    unsuccessful_df = pd.concat([unsuccessful_df, discarded], ignore_index=True)
+    _df.drop(index=_rows, inplace=True)
+    _df.reset_index(drop=True, inplace=True)
+
 
 # 5.0 Replace all values which are NaN to np.nan
-df.replace('NaN', np.nan, inplace=True)
-df.replace('NA', np.nan, inplace=True)
-df.replace('na', np.nan, inplace=True)
-df.replace('N/A', np.nan, inplace=True)
-df.replace('n/a', np.nan, inplace=True)
+invalid_values = ['NaN', 'NA', 'na', 'N/A', 'n/a']
+df.replace(invalid_values, np.nan, inplace=True)
 
-# 5.1. if column 'use data for AI' is marked with a 0 , discard data and add data to a new data frame
-discarded_df = df[df['use data for AI'] == 0].copy()
-# Create a new column 'criterion' with a default value in discarded_df
-discarded_df['discarding criterion'] = None
-discarded_df = discarded_df.reset_index(drop=True)
-# Fill the 'criteria' column where 'use data for AI' is 0
-discarded_df.loc[discarded_df['use data for AI'] == 0, 'discarding criterion'] = 'use-data-for-AI=0'
-# Drop all rows where 'use data for AI' is 0 from original dataframe
-df.drop(df[df['use data for AI'] == 0].index, inplace=True)
-# reset the index of the original dataframe
-df = df.reset_index(drop=True)
-
-
-# 5.2. if reactor underfilled > 1, remove row and add row to new dataframe which is later printed to Excel
-#  file as discarded samples
-#   5.2.2 and 5.2.3 do the same with Precipitation and gelation/phase separation in the reactor
-criteria_and_threshold = {"reactor is underfilled after polymerization?": 1.1,
+# 5.1 if reactor underfilled > 1, discard row/kinetic
+#    same with precipitation and gelation/phase separation in the reactor
+criteria_and_threshold = {"reactor is underfilled after polymerization?": 1.1,  # slightly (<20%) underfilled is ok (1)
                           "Precipitate in reactor?": 0.001,
-                          "hood on top of reactor? (phase separation)": 0.001}
+                          "hood on top of reactor? (phase separation)": 0.001,
+                          "content of reactor gelated (bulk not hood or precipitate)?": 0.001}
 abbreviation_criteria = {"reactor is underfilled after polymerization?": "underfilled",
                          "Precipitate in reactor?": "precipitate",
-                         "hood on top of reactor? (phase separation)": "phase separation"}
+                         "hood on top of reactor? (phase separation)": "phase separation",
+                         "content of reactor gelated (bulk not hood or precipitate)?": "gelated"}
 
-for criteria, threshold in zip(criteria_and_threshold.keys(), criteria_and_threshold.values()):
-    _temp_df = df[df[criteria] >= threshold].copy()
-    # Create a new column 'criterion' with a default value in discarded_df
+for criterion, threshold in zip(criteria_and_threshold.keys(), criteria_and_threshold.values()):
+    _temp_df = df[df[criterion] >= threshold].copy()
+    # Create a new column 'criterion' with a default value in unsuccessful_df
     _temp_df['discarding criterion'] = None
     _temp_df = _temp_df.reset_index(drop=True)
-    # Fill the 'criteria' column where 'reactor is underfilled after polymerization?' is >= 1
-    _temp_df.loc[_temp_df[criteria] >= threshold, 'discarding criterion'] = abbreviation_criteria[criteria]
-    new_df = pd.concat([discarded_df, _temp_df])
-    discarded_df = new_df
-    discarded_df.reset_index(drop=True)
-    # Drop all rows where 'reactor is underfilled after polymerization?' is >= 1 from original dataframe
-    df.drop(df[df[criteria] >= threshold].index, inplace=True)
+    # Add the reason of discarding to the criterion column where the criterion is met
+    _temp_df.loc[_temp_df[criterion] >= threshold, 'discarding criterion'] = abbreviation_criteria[criterion]
+    unsuccessful_df = pd.concat([unsuccessful_df, _temp_df])
+    unsuccessful_df.reset_index(drop=True)
+    # Drop all rows where the criteriom is not met from original dataframe
+    df.drop(df[df[criterion] >= threshold].index, inplace=True)
     # reset the index of the original dataframe
     df = df.reset_index(drop=True)
 
-# 5.3. replace column values (e.g. if column value is ooc or for Mn: > 100.000 g/mol, replace with NaN)
-# 5.3.1. define regular expressions for the columns which should be checked (e.g. all Mn or Mw or conversion columns)
+# 5.2 replace experimental values that are out of their analytic detectable range
+#   e.g. if Mn is out of calibration (ooc) (> 100.000 g/mol) replace it with NaN
+
+# define regular expressions for the columns which should be checked (Mn, Mw, conversion columns)
 regex_Mn = r't\d+h-Mn'
 regex_Mw = r't\d+h-Mw'
 regex_dispersity = r't\d+h-\u00d0'
 regex_conversion = r't\d+h-conversion'
 
-# 5.3.2. for Mn, Mw remove ooc and replace > 100.000 g/mol and 0 g/mol with NaN
-# Filter columns that match the pattern
-filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
+# 5.2.1. for Mn, Mw replace "ooc" and numbers > 100.000 g/mol with NaN
+# find molar mass columns
+molar_mass_columns = [col for col in df.columns if re.match(regex_Mn, col) or re.match(regex_Mw, col)]
 # Iterate over the matched columns and rows
-for column_name in filtered_columns_molar_mass:
+for column_name in molar_mass_columns:
     for index in df.index:
         value = df.loc[index, column_name]
         # Check if the value is a string and contains the pattern '\s*ooc\s*', if so: replace with NaN
@@ -228,100 +239,25 @@ for column_name in filtered_columns_molar_mass:
         elif float(value) > 100000:
             df.loc[index, column_name] = np.nan
 
-''' Activation maybe later (if required)
-
-            #5.3.3. for dispersity remove > 2.2 with NaN and also remove the corresponding Mn and Mw values 
-            #(the Mn and Mw parts still need to be implemented)
-                # Filter columns that match the pattern
-filtered_columns_molar_mass = [col for col in df.columns if re.match(regex_dispersity, col)]
-                # Iterate over the matched columns and rows
-for column_name in filtered_columns_molar_mass:
-    for i in range(len(df)):
-        value = df[column_name][i]
-                    #Check if value is a float and larger than 2.2, if so: replace with NaN
-        if float(value) > 2.2:
-            df[column_name] = df[column_name].replace(value, np.nan)            
-'''
-
-# 5.3.4. for conversion remove negative conversions and conversions which are negative in comparison to previous
-#  time points by at least 10% (Method inaccuracy)
-# 5.3.4.1. remove negative conversions (< -5%)
-filtered_columns_conversion = [col for col in df.columns if re.match(regex_conversion, col)]
-for column_name in filtered_columns_conversion:
+# 5.2.2 set negative conversions (< -5%) to NaN
+conversion_columns = [col for col in df.columns if re.match(regex_conversion, col)]
+for column_name in conversion_columns:
     for index in df.index:
         value = df.loc[index, column_name]
         # check if conversion is negative (larger than 5% negative)
-        if float(value) < -0.05:
+        if float(value) < -NMR_method_accuracy:
             df.loc[index, column_name] = np.nan
 
-            # 5.3.4.2. check if conversion is negative in comparison to previous time point by at least 10% (Method
-            # inaccuracy) Define the threshold for the 10% decrease for consecutive time points --> more than 10%
-            # decrease in comparison to previous time point would lead to NaN
-threshold = 0.1
-rows_to_remove = []  # list of rows which should be removed
-
-
-# if the previous value is NaN, check the value from before the previous value
-def check_decreasing_conversion(_value, col_index):
-    if np.isnan(_value):
-        return False
-    previous_col = filtered_columns_conversion[col_index - 1]
-    previous_val = df.at[i, previous_col]
-    if np.isnan(previous_val):
-        if col_index == 1:
-            return False
-        return check_decreasing_conversion(_value, col_index - 1)
-    # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should
-    # be thrown out.
-    return _value < (previous_val - threshold)
-
-
-# Iterate through the rows and perform the comparisons
-for i in range(1, len(df)):
-    for col in range(1, len(filtered_columns_conversion)):
-        current_column = filtered_columns_conversion[col]
-        previous_column = filtered_columns_conversion[col - 1]
-        current_value = df.at[i, current_column]
-
-        # check if both values for comparison are floats, then compare them
-        if check_decreasing_conversion(current_value, col):
-            rows_to_remove.append(i)
-
-# remove rows with conversion below 0
-for idx, row in df.iterrows():
-    row_values = [row[filtered_col_conv] for filtered_col_conv in filtered_columns_conversion]
-    if np.average(row_values) < 0.01:
-        if idx not in rows_to_remove:
-            rows_to_remove.append(idx)
-
-            # 5.3.4.3. Remove the rows from df and add them to discarded_df
-discarded_df3 = df.loc[rows_to_remove].copy()
-# Create a new column 'criterion' with a default value in discarded_df
-discarded_df3['discarding criterion'] = None
-discarded_df3 = discarded_df3.reset_index(drop=True)
-discarded_df3.loc[discarded_df3[
-                      'discarding criterion'].isna(), 'discarding criterion'] = \
-    f'Decreasing conversion within kinetic more than {threshold} from one time point to the next time point'
-new_df = pd.concat([discarded_df, discarded_df3])
-discarded_df = new_df
-# drop all rows from df which should be removed
-df = df.drop(rows_to_remove)
-
-# 5.3.4.4. Reset the indices of the dataframes
-df = df.reset_index(drop=True)
-discarded_df = discarded_df.reset_index(drop=True)
-
-# 5.3.5. remove all datasets (rows) which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data
+# 5.3.1 remove all rows which have less than x (x=4) full (Mn,Mw, D) SEC data points and/or NMR data
 # points (conversions)
-REMOVER_DECIDER = 4  # number of data points which is necessary to keep the data set
+MIN_DATAPOINTS = 4  # number of data points which is necessary to keep the data set
 rows_to_remove = []  # list of rows which should be removed
 
-# 5.3.5.1. iterate through the rows
-for index, row in df.iterrows():
+for index, row in df.iterrows():  # iterate through the rows
     is_complete_SEC = 0
     is_complete_NMR = 0
 
-    # 5.3.5.1.1. iterate through the time points for the SEC data points
+    # iterate through the time points for the SEC data points
     # if one of the data points is NaN, add 0 to the is_complete variable
     for time_point in times_list:
         if pd.isna(row[time_point + '-Mn']):
@@ -336,40 +272,66 @@ for index, row in df.iterrows():
         else:
             is_complete_SEC += 1
 
-            # 5.3.5.1.2. same as above for NMR data points
+            # same as above for NMR data points
     for time_point in times_list:
-        # 5.3.5.1.2.1. use all-time points except t6h and t10h (only SEC sampling for those)
+        # use all-time points except t6h and t10h (only SEC sampling for those)
         if time_point != 't6h' and time_point != 't10h':
             if pd.isna(row[time_point + '-conversion']):
                 is_complete_NMR += 0
             else:
                 is_complete_NMR += 1
 
-            # 5.3.5.2 check if the number of complete SEC and NMR data points is smaller than the REMOVER_DECIDER
-    if is_complete_NMR < REMOVER_DECIDER or is_complete_SEC < REMOVER_DECIDER:
+            # check if the number of complete SEC and NMR data points is smaller than the MIN_DATAPOINTS
+    if is_complete_NMR < MIN_DATAPOINTS or is_complete_SEC < MIN_DATAPOINTS:
         rows_to_remove.append(index)
 
-        # 5.3.5.3. Remove the rows from df and add them to discarded_df
-discarded_df4 = df.loc[rows_to_remove].copy()
-# Create a new column 'criterion' with a default value in discarded_df
-discarded_df4['discarding criterion'] = None
-discarded_df4 = discarded_df4.reset_index(drop=True)
-# Fill the 'discarding criterion' column with new text, where the number of complete data points is smaller than the
-# REMOVER_DECIDER
-discarded_df4['discarding criterion'] = f'less than {REMOVER_DECIDER} full data points in data set'
+move_to_unsuccessful(df, rows_to_remove, f'less than {MIN_DATAPOINTS} full data points in data set')
 
-new_df = pd.concat([discarded_df, discarded_df4])
-discarded_df = new_df
-# drop all rows from df which should be removed
-df = df.drop(rows_to_remove)
+# 5.3.2. remove rows with average conversion below 1%
+rows_to_remove = []  # list of rows which should be removed
+# remove rows with conversion below 0
+for idx, row in df.iterrows():
+    row_values = [row[filtered_col_conv] for filtered_col_conv in conversion_columns]
+    if np.average(row_values) < 0.01:
+        if idx not in rows_to_remove:
+            rows_to_remove.append(idx)
+move_to_unsuccessful(df, rows_to_remove, 'low average conversion (below 1%)')
 
-# 5.3.5.4. Reset the indices of the dataframes
-df = df.reset_index(drop=True)
-discarded_df = discarded_df.reset_index(drop=True)
+# 5.3.3. for conversion remove negative conversions and conversions which are negative in comparison to previous
+#  time points by at least 10%
+rows_to_remove = []  # list of rows which should be removed
 
-# 5.3.6. Remove kinetics with decreasing Mn/Mw values
-M_SEC_err = 100000 * 2 * 0.10  # the SEC measures up to  100000 g/mol.
-# The error for the SEC system of Mn/Mw is 10% so the range is twice
+
+# if the previous value is NaN, check the value from before the previous value
+def check_decreasing_conversion(_value, col_index):
+    if np.isnan(_value):
+        return False
+    previous_col = conversion_columns[col_index - 1]
+    previous_val = df.at[i, previous_col]
+    if np.isnan(previous_val):
+        if col_index == 1:
+            return False
+        return check_decreasing_conversion(_value, col_index - 1)
+    # if the conversion is decreasing by this much it cannot be used further for the kinetic study and should
+    # be thrown out.
+    return _value < (previous_val - NMR_method_accuracy * 2)
+
+
+# Iterate through the rows and perform the comparisons
+for i in range(1, len(df)):
+    for col in range(1, len(conversion_columns)):
+        current_column = conversion_columns[col]
+        previous_column = conversion_columns[col - 1]
+        current_value = df.at[i, current_column]
+
+        # check if both values for comparison are floats, then compare them
+        if check_decreasing_conversion(current_value, col):
+            rows_to_remove.append(i)
+
+move_to_unsuccessful(df, rows_to_remove,
+                     f'Decreasing conversion within kinetic more than {NMR_method_accuracy * 2} from one time point to the next time point')
+
+# 5.3.4 Remove kinetics with decreasing Mn/Mw values
 rows_to_remove = []  # list of rows which should be removed
 
 Mw_Mn_get_out_dict = {}
@@ -388,8 +350,9 @@ for index, row in df.iterrows():
         if curr_point > highest_M_on_kinetic:  # do comparison only after a drop
             highest_M_on_kinetic = curr_point
 
-        elif curr_point < highest_M_on_kinetic - M_SEC_err:
-            Mw_Mn_get_out_dict[index] = "removed due to Mw sinking more than 2x10% after the maximum has been reached"
+        # The error can be combined maximal and minimal so the range here is doubled
+        elif curr_point < highest_M_on_kinetic - M_SEC_err * 2:
+            Mw_Mn_get_out_dict[index] = f"removed due to Mw sinking more than {M_SEC_err * 2} after the maximum has been reached"
             rows_to_remove.append(index)
             break
 
@@ -402,32 +365,37 @@ for index, row in df.iterrows():
         if curr_point > highest_M_on_kinetic:  # do comparison only after a drop
             highest_M_on_kinetic = curr_point
 
-        elif curr_point < highest_M_on_kinetic - M_SEC_err:
+        elif curr_point < highest_M_on_kinetic - M_SEC_err * 2:
             rows_to_remove.append(index)
             if index in Mw_Mn_get_out_dict.keys():
-                Mw_Mn_get_out_dict[index] = "removed due to Mw and Mn sinking sinking more than 2x10% after the maximum has been reached"
+                Mw_Mn_get_out_dict[index] = \
+                    f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached"
             else:
-                Mw_Mn_get_out_dict[index] = "removed due to Mn sinking more than 2x10% after the maximum has been reached"
+                Mw_Mn_get_out_dict[index] = \
+                    f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"
                 rows_to_remove.append(index)
             break
 
-#  exclude rows from df and add them to discarded_df
+#  exclude rows from df and add them to unsuccessful_df
 discarded_df5 = df.loc[rows_to_remove].copy()
 discarded_df5["discarding criterion"] = None
 for index in Mw_Mn_get_out_dict.keys():
     discarded_df5.loc[index, "discarding criterion"] = Mw_Mn_get_out_dict[index]
 discarded_df5.reset_index(drop=True, inplace=True)
 
-discarded_df = pd.concat([discarded_df, discarded_df5])
-discarded_df.reset_index(drop=True, inplace=True)
+unsuccessful_df = pd.concat([unsuccessful_df, discarded_df5])
+unsuccessful_df.reset_index(drop=True, inplace=True)
 
 df.drop(rows_to_remove, inplace=True)
 df.reset_index(drop=True, inplace=True)
 
-# 5.4. Removing al non set-up related rows from the discarded dataframe and add them to a new failed dataframe
-setup_related_criteria = ["use-data-for-AI=0", "underfilled", "precipitate", "less than 4 full data points in data set"]
-failed_df = discarded_df[~discarded_df['discarding criterion'].isin(setup_related_criteria)].copy()
-discarded_df = discarded_df[discarded_df['discarding criterion'].isin(setup_related_criteria)]
+# 5.4 Removing al non set-up related rows from the discarded dataframe and add them to a new failed dataframe
+setup_unrelated_criteria = ["low average conversion (below 1%)",
+                            f"removed due to Mw sinking more than {M_SEC_err * 2} after the maximum has been reached",
+                            f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached",
+                            f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"]
+failed_df = unsuccessful_df[unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)].copy()
+unsuccessful_df = unsuccessful_df[~unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)]
 
 ###################################################################
 
@@ -467,10 +435,13 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
     # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     failed_df.to_excel(writer, sheet_name='failed samples', index=False)
-    discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
-    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+    unsuccessful_df.to_excel(writer, sheet_name="discarded samples", index=False)
+    # permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)  # not needed in the dataset
 
     # also copy the abbreviations and correct times sheet to the new Excel file
-    pd.read_excel(INPUT_FILE_PATH, sheet_name="exact sampling times").to_excel(writer, sheet_name="exact sampling times", index=False)
-    pd.read_excel(INPUT_FILE_PATH, sheet_name="Legend for Abbreviations").to_excel(writer, sheet_name="Legend for Abbreviations", index=False)
-
+    pd.read_excel(INPUT_FILE_PATH, sheet_name="exact sampling times").to_excel(writer,
+                                                                               sheet_name="exact sampling times",
+                                                                               index=False)
+    pd.read_excel(INPUT_FILE_PATH, sheet_name="Legend for Abbreviations").to_excel(writer,
+                                                                                   sheet_name="Legend for Abbreviations",
+                                                                                   index=False)
