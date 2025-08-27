@@ -352,7 +352,7 @@ for index, row in df.iterrows():
 
         # The error can be combined maximal and minimal so the range here is doubled
         elif curr_point < highest_M_on_kinetic - M_SEC_err * 2:
-            Mw_Mn_get_out_dict[index] = "removed due to Mw sinking more than 2x10% after the maximum has been reached"
+            Mw_Mn_get_out_dict[index] = f"removed due to Mw sinking more than {M_SEC_err * 2} after the maximum has been reached"
             rows_to_remove.append(index)
             break
 
@@ -369,10 +369,10 @@ for index, row in df.iterrows():
             rows_to_remove.append(index)
             if index in Mw_Mn_get_out_dict.keys():
                 Mw_Mn_get_out_dict[index] = \
-                    "removed due to Mw and Mn sinking sinking more than 2x10% after the maximum has been reached"
+                    f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached"
             else:
                 Mw_Mn_get_out_dict[index] = \
-                    "removed due to Mn sinking more than 2x10% after the maximum has been reached"
+                    f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"
                 rows_to_remove.append(index)
             break
 
@@ -391,7 +391,9 @@ df.reset_index(drop=True, inplace=True)
 
 # 5.4 Removing al non set-up related rows from the discarded dataframe and add them to a new failed dataframe
 setup_unrelated_criteria = ["low average conversion (below 1%)",
-                            f'Decreasing conversion within kinetic more than {NMR_method_accuracy * 2} from one time point to the next time point']
+                            f"removed due to Mw sinking more than {M_SEC_err * 2} after the maximum has been reached",
+                            f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached",
+                            f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"]
 failed_df = unsuccessful_df[unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)].copy()
 unsuccessful_df = unsuccessful_df[~unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)]
 
@@ -434,7 +436,7 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     failed_df.to_excel(writer, sheet_name='failed samples', index=False)
     unsuccessful_df.to_excel(writer, sheet_name="discarded samples", index=False)
-    permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)
+    # permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)  # not needed in the dataset
 
     # also copy the abbreviations and correct times sheet to the new Excel file
     pd.read_excel(INPUT_FILE_PATH, sheet_name="exact sampling times").to_excel(writer,
