@@ -395,7 +395,7 @@ setup_unrelated_criteria = ["low average conversion (below 1%)",
                             f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached",
                             f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"]
 failed_df = unsuccessful_df[unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)].copy()
-unsuccessful_df = unsuccessful_df[~unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)]
+discarded_df = unsuccessful_df[~unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)]
 
 ###################################################################
 
@@ -435,7 +435,7 @@ with pd.ExcelWriter(OUTPUT_FILE_PATH) as writer:
     # to store the dataframe in specified sheet
     df.to_excel(writer, sheet_name='utilizable samples', index=False)
     failed_df.to_excel(writer, sheet_name='failed samples', index=False)
-    unsuccessful_df.to_excel(writer, sheet_name="discarded samples", index=False)
+    discarded_df.to_excel(writer, sheet_name="discarded samples", index=False)
     # permutations_df.to_excel(writer, sheet_name="Missing experiments", index=False)  # not needed in the dataset
 
     # also copy the abbreviations and correct times sheet to the new Excel file
