@@ -314,24 +314,29 @@ def format_database_to_kinetics_df():
     # So first priority would be sorting after nearest to 80% conversion.
 
     # create a score ingesting the importance of the different kinetic descriptors
-    #     Conversion*1 + time²*(-0.8) + error_score*(0.5) + dispersity*(0.3)
+    #     Conversion*1 + error_score*(0.5) + dispersity*(0.3)
     #     while spanning between the optimum and the least bearable values like in the following:
     #          Conversion: |con-0.8| - 0 (0.8 is the optimum)
     #             using a linear decreasing function -x*m+b
-    #          Time: 0 - np.inf (0 is the optimum) (more than 72 is not bearable)
-    #             using a negative potential function -x**2+b
     #          Error: 0 - 12 (0 is the optimum) (the error is more negligible)
     #             using a linear decreasing function -x*m+b
-    #          Dispersity: 1 is the optimum, at 1.5 half the score should be lost. The further, the less impact.
+    #          Dispersity: 1 is the optimum, at 1.5 half the score should be lost. The further from there the less impact.
     #             using a reciprocal function 1/(2x-1)
+
+    # originally there was also time in the score, however this was dependent on the reaction curve being a negative growth within the sampling time frame:
+    # (Time: 0 - np.inf (0 is the optimum) (more than 30 is not bearable and set as maximum)
+    #             using a negative potential function -x**2+b)
+    #             (-(row.theo_react_end / 30) ** 2 + 1) * 0.8
 
     score = []
     for row in kinetics_df.itertuples():
-        row_score = ((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + (-(row.theo_react_end / 30) ** 2 + 1) * 0.8 + (
-                    (12 - row.error_score) / 12) * 0.5) + (1 / (2 * row.mean_dispersity - 1) * 0.3)
-        normalized_row_score = row_score / (1 + 0.8 + 0.5 + 0.3)
+        row_score = (((0.8 - np.abs(row.theo_max_con - 0.8)) / 0.8 * 1 + ((12 - row.error_score) / 12) * 0.5) +
+                     (1 / (2 * row.mean_dispersity - 1) * 0.3))
+        normalized_row_score = row_score / (1 + 0.5 + 0.3)
         score.append(normalized_row_score)
+
     kinetics_df["score"] = score
+    kinetics_df
 
     # re-involve the abortive experiments with a score of 0
     # 1st get the experiments from the failed_df
