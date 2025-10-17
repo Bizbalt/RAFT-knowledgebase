@@ -189,7 +189,8 @@ def move_to_unsuccessful(_df, _rows, _reason):
 
 # 5.0 Replace all values which are NaN to np.nan
 invalid_values = ['NaN', 'NA', 'na', 'N/A', 'n/a']
-df.replace(invalid_values, np.nan, inplace=True)
+with pd.option_context('future.no_silent_downcasting', True):
+    df.replace(invalid_values, np.nan, inplace=True)
 
 # 5.1 if reactor underfilled > 1, discard row/kinetic
 #    same with precipitation and gelation/phase separation in the reactor
@@ -366,10 +367,9 @@ for index, row in df.iterrows():
             highest_M_on_kinetic = curr_point
 
         elif curr_point < highest_M_on_kinetic - M_SEC_err * 2:
-            rows_to_remove.append(index)
-            if index in Mw_Mn_get_out_dict.keys():
+            if index in rows_to_remove:
                 Mw_Mn_get_out_dict[index] = \
-                    f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached"
+                    f"removed due to Mw and Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"
             else:
                 Mw_Mn_get_out_dict[index] = \
                     f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"
@@ -392,7 +392,7 @@ df.reset_index(drop=True, inplace=True)
 # 5.4 Removing al non set-up related rows from the discarded dataframe and add them to a new failed dataframe
 setup_unrelated_criteria = ["low average conversion (below 1%)",
                             f"removed due to Mw sinking more than {M_SEC_err * 2} after the maximum has been reached",
-                            f"removed due to Mw and Mn sinking sinking more than {M_SEC_err * 2} after the maximum has been reached",
+                            f"removed due to Mw and Mn sinking more than {M_SEC_err * 2} after the maximum has been reached",
                             f"removed due to Mn sinking more than {M_SEC_err * 2} after the maximum has been reached"]
 failed_df = unsuccessful_df[unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)].copy()
 discarded_df = unsuccessful_df[~unsuccessful_df['discarding criterion'].isin(setup_unrelated_criteria)]
