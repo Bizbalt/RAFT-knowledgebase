@@ -52,23 +52,30 @@ async function table_reformat_init() {
     }
     document.getElementById("results_div_table").style.display = "block";
 
-    // recolor rows that have a score of 0 red-ish
+    // recolor rows that have a score of 0 red-ish and -1 gray
     rows = table.rows;
     // iterate through every but the first line
     const score_col_num =  rows[1].getElementsByTagName("TD").length -1
     for (let i = 1; i < (rows.length); i++) {
         const row_elements = rows[i].getElementsByTagName("TD")
         // get the score row
-        const score = row_elements[score_col_num].innerText;
-        // decide to change the color depending on the score being higher than 0
-        if (!parseFloat(score) > 0){
+        const score = parseFloat(row_elements[score_col_num].innerText);
+        // decide to change the color depending on the score being 0 or -1
+        if (score < 0){
+            for (let ele of row_elements){
+                // color each element
+                ele.style.backgroundColor = "#d3d3d3"
+                ele.style.padding = "0 0.25rem"
+            }
+            continue
+        }
+        if (score === 0){
             for (let ele of row_elements){
                 // color each element
                 ele.style.backgroundColor = "#ffc8be"
                 ele.style.padding = "0 0.25rem"
             }
         }
-
     }
 }
 
