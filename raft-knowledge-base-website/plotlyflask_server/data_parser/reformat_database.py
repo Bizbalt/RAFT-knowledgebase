@@ -345,33 +345,32 @@ def format_database_to_kinetics_df():
     #   leave conversion, time, score and so forth 0
     # 3rd append them to the kinetics_df
     # 4th drop all duplicate from the failed/discarded only so no failed experiments will be shown twice when re-inserted:
-    #   combine both, drop all duplicates for monomer, solvent, RAFT-Agent
+    #   combine both, drop all duplicates for monomer, solvent, RAFT-agent
     #   keep the remaining exp_nr and mask with them what should be left in the reformatted_failed and drop the rest
     #   finally concat the kinetics_df with the reformatted_failed and reformatted_discarded
     reformatted_failed = sRt.failed_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
     reformatted_discarded = sRt.discarded_df[["Experiment number", "monomer", "RAFT-Agent", "solvent"]].copy()
     # rename and reorder columns
     for _df in [reformatted_failed, reformatted_discarded]:
-        _df.columns = ["exp_nr", "monomer", "RAFT-Agent", "solvent"]
+        _df.columns = ["exp_nr", "monomer", "RAFT-agent", "solvent"]
         _df["exp_nr"] = _df["exp_nr"].astype(str)
-        mappables = ["monomer", "RAFT-Agent", "solvent"]
+        mappables = ["monomer", "RAFT-agent", "solvent"]
         _df[mappables] = _df[mappables].map(lambda x: reaction_descriptors_dict[x])
 
     reformatted_failed["score"] = 0
     reformatted_discarded["score"] = -1
 
-    # this series withholds all the exp numbers for the failed and discarded that are not duplicated nor in the kinetics_df
-    exp_nr_to_keep = pd.concat(
-        [kinetics_df,
-         reformatted_failed.drop_duplicates(subset=["monomer", "RAFT-Agent", "solvent"], keep="first"),
-         reformatted_discarded.drop_duplicates(subset=["monomer", "RAFT-Agent", "solvent"], keep="first")]
-    ).drop_duplicates(subset=["monomer", "RAFT-Agent", "solvent"], keep=False)["exp_nr"]
+    # following are all the exp numbers for the failed and discarded, that are not duplicated nor in successful
+    # duplicates for successful educt combinations are allowed. If there is no successful one failed is allowed and if there is not even one failed one discarded is allowed
+    reformatted_failed_and_discarded_unique = pd.concat([reformatted_failed, reformatted_discarded]).drop_duplicates(
+        subset=["monomer", "RAFT-agent", "solvent"], keep="first")
+    exp_nr_to_keep = list(pd.concat([kinetics_df, reformatted_failed_and_discarded_unique]).drop_duplicates(
+        subset=["monomer", "RAFT-agent", "solvent"], keep=False)["exp_nr"])
 
-    # create a mask
-    reform_to_keep_failed = reformatted_failed["exp_nr"].isin(exp_nr_to_keep)
-    reform_to_keep_discarded = reformatted_discarded["exp_nr"].isin(exp_nr_to_keep)
-    kinetics_df = pd.concat([kinetics_df, reformatted_failed[reform_to_keep_failed], reformatted_discarded[reform_to_keep_discarded]])
+    reform_to_keep_failed = reformatted_failed[reformatted_failed["exp_nr"].isin(exp_nr_to_keep)]
+    reform_to_keep_discarded = reformatted_discarded[reformatted_discarded["exp_nr"].isin(exp_nr_to_keep)]
 
+    kinetics_df = pd.concat([kinetics_df, reform_to_keep_failed, reform_to_keep_discarded]).reset_index(drop=True)
     # pickle dataframe for reload on no change and overwrite prior file
     kinetics_df.to_pickle(pickle_path)
 
