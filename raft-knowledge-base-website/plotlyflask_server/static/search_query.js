@@ -117,10 +117,11 @@ async function plot_exp() {
     let plot_mw = document.getElementById("mw").checked
     let fit_curves = [document.getElementById("fit_curve").checked, document.getElementById("fit_derivative_curve").checked]
     let stacked_plots = document.getElementById("stacked_plots").checked
+    let plot_semilog = document.getElementById("semilog").checked
     const response = await fetch(url + `plot_exp`, {
         method: "POST",
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ exp_nr: experiments_list, plot_conv:plot_conv, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves, stacked_plots: stacked_plots })
+        body: JSON.stringify({ exp_nr: experiments_list, plot_conv:plot_conv, plot_mn: plot_mn, plot_mw: plot_mw, fit_curves: fit_curves, stacked_plots: stacked_plots, plot_semilog:plot_semilog })
         })
 
     const loading_gif = document.createElement("img");
@@ -144,6 +145,11 @@ async function prohibit_illegal_checkbox_choices(){
     const conv_neg_der_fit_checkbox = document.getElementById("fit_derivative_curve")
     const conv_checkbox = document.getElementById("conv")
     const conv_options_div = document.getElementById("conv_options")
+    const semilog_checkbox = document.getElementById("semilog")
+    const mn_checkbox = document.getElementById("mn")
+    const mw_checkbox = document.getElementById("mw")
+    const stacked_plots_checkbox = document.getElementById("stacked_plots")
+
     console.log(conv_checkbox)
     console.log(conv_options_div)
 
@@ -168,9 +174,6 @@ async function prohibit_illegal_checkbox_choices(){
     }
     conv_neg_fit_checkbox.addEventListener("change", enable_neg_der_fit_box)
 
-    const mn_checkbox = document.getElementById("mn")
-    const mw_checkbox = document.getElementById("mw")
-    const stacked_plots_checkbox = document.getElementById("stacked_plots")
 
     function enable_stacked_plots_box(){
         let checked = 0
@@ -187,7 +190,34 @@ async function prohibit_illegal_checkbox_choices(){
             stacked_plots_checkbox.disabled = true;
         }
     }
+
     for (const checkbox of [conv_checkbox, mn_checkbox, mw_checkbox]){
         checkbox.addEventListener("change", enable_stacked_plots_box)
+    }
+
+    // when semilog is ticked all other checkboxes are unticked
+    semilog_checkbox.addEventListener("change", () => {
+        if (semilog_checkbox.checked) {
+            for (const cb of [conv_checkbox, mn_checkbox, mw_checkbox, stacked_plots_checkbox]) {
+                cb.checked = false;
+            }
+            // hide conv options
+            conv_options_div.style.display = "none";
+
+            stacked_plots_checkbox.checked = false;
+            stacked_plots_checkbox.disabled = true;
+        }
+    })
+
+    // Wenn eine andere Checkbox angehakt wird: semilog deaktivieren
+    const other_checkboxes = [conv_checkbox, mn_checkbox, mw_checkbox, conv_neg_fit_checkbox, conv_neg_der_fit_checkbox, stacked_plots_checkbox];
+    for (const cb of other_checkboxes) {
+        cb.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                semilog_checkbox.checked = false;
+                return
+            }
+            semilog_checkbox.disabled = false;
+        })
     }
 }

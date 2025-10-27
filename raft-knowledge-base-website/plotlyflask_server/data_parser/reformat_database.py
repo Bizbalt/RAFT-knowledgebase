@@ -200,8 +200,8 @@ def format_database_to_kinetics_df():
     kinetics_df = pd.DataFrame(columns=['exp_nr', 'max_con', 'theo_max_con', 'theo_react_end', 'max_mn', 'monomer',
                                         'RAFT-agent', 'solvent', 'fit_p1', 'fit_p2', 'p1_variance',
                                         'p1_p2_covariance', 'p2_variance', 'squared_error', 'conv_time_data',
-                                        'Mn_time_data', 'Mw_time_data',
-                                        'dispersity_time_data'])  # create new dataframe with kinetics per row
+                                        'Mn_time_data', 'Mw_time_data', 'dispersity_time_data',
+                                        "semilog_conv_time_data"])  # create new dataframe with kinetics per row
 
     for idx, kinetic_curve in enumerate(kinetic_curves):
         # first make sure the datapoints are in the right format and not sometimes int sometimes float
@@ -244,6 +244,20 @@ def format_database_to_kinetics_df():
         nan_val_in_d_mask = ~np.isnan(ydata_dispersity)
         dispersity_time_data = np.array([xdata[nan_val_in_d_mask], ydata_dispersity[nan_val_in_d_mask]])
 
+        # add data for semilogaritmic plotting
+        # [M]_0 = 1 mol/l
+        # conv = [M]_t/[M]_0 -> conv = [M]_t
+        # [M]_t=[M]_0 - [M]_0 * conversion
+        # ln([M]_0/[M]_t) -> ln(1/1-conv) to plot vs time
+        nan_ydata_conv_mask = ~np.isnan(ydata_conv)
+        time_w_nan, conversion_w_nan = xdata[nan_ydata_conv_mask], ydata_conv[nan_ydata_conv_mask]
+
+        def semilog(conv):
+            if conv == 1: return np.inf
+            return np.log(1 / (1 - conv))
+
+        semilog_conv_time_data = np.array([time_w_nan, np.array([semilog(s_conv) for s_conv in conversion_w_nan])])
+
         kinetics_df.loc[idx] = {"exp_nr": str(kinetic_curve["exp_nr"].iloc[1]), "max_con": max(ydata_conv),
                                 "theo_max_con": "yet to calc", "theo_react_end": "yet to calc",
                                 "max_mn": max_Mn,
@@ -254,7 +268,8 @@ def format_database_to_kinetics_df():
                                 "p1_variance": pcov[0][0], "p1_p2_covariance": pcov[0][1], "p2_variance": pcov[1][1],
                                 "squared_error": squared_error, "conv_time_data": conv_time_data,
                                 "Mn_time_data": Mn_time_data, "Mw_time_data": Mw_time_data,
-                                "dispersity_time_data": dispersity_time_data}
+                                "dispersity_time_data": dispersity_time_data,
+                                "semilog_conv_time_data": semilog_conv_time_data}
 
     kinetics_df.reset_index(drop=True, inplace=True)
     kinetics_df.drop(axis="index", index=kinetics_df[kinetics_df["max_con"] <= 0].index, inplace=True)

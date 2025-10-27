@@ -92,7 +92,7 @@ class KnowledgeBase:
 
     def plot_exp(
             self, exp_nr: str | list, plot_conv: bool = True, plot_mn: bool = False, plot_mw: bool = False,
-            fit_curves=None, stacked_plots=False, *args, **kwargs):
+            fit_curves=None, stacked_plots=False, plot_semilog:bool = False, *args, **kwargs):
         """
         Plot the kinetic curves for the experiment number(s) exp_nr.
         :param exp_nr: The experiment number(s) to plot
@@ -102,11 +102,17 @@ class KnowledgeBase:
         :param fit_curves: A tuple with two boolean values, the first one determines whether to plot the fit curves,
         the second one determines whether to plot the derivative of the fit curves.
         :param stacked_plots: Whether to stack the plots vertically
+        :param plot_semilog: Whether to plot the molecular weight data on a semi-logarithmic scale (only solo)
         :param args: Additional arguments to be passed to the plotly express line function
         :param kwargs: Additional keyword arguments to be passed to the plotly express line function
 
         :returns: A plotly Figure object
         """
+        if plot_semilog and any([plot_conv, plot_mn, plot_conv, stacked_plots]):
+                return px.scatter_3d().add_annotation(
+                    text="Semi-logarithmic plot is only available in solo and unstacked mode.",
+                    showarrow=False, font={"size":20})
+
         if fit_curves is None:
             fit_curves = [True, True]
         plot_data = self.search_for_exp(exp_nr).dropna()
@@ -129,8 +135,8 @@ class KnowledgeBase:
                                         "legendgroup": str(kinetic_to_plot.exp_nr),
                                         "col": 1}
             if plot_conv:
-                x_data, ydata = kinetic_to_plot.conv_time_data
-                exp_fig.add_scatter(x=x_data, y=ydata, row=stack_amount, **additional_plot_keywords)
+                x_data, y_data = kinetic_to_plot.conv_time_data
+                exp_fig.add_scatter(x=x_data, y=y_data, row=stack_amount, **additional_plot_keywords)
 
                 if fit_curves[0]:
                     if fit_curves[1]:
@@ -168,25 +174,36 @@ class KnowledgeBase:
                 if stacked_plots:
                     exp_fig.update_yaxes(title_text="M<sub>w</sub> [g/mol]", row=stack_amount, col=1)
 
+            if plot_semilog:
+                x_data, y_data = kinetic_to_plot.semilog_conv_time_data
+                exp_fig.add_scatter(x=x_data, y=y_data, row=stack_amount, **additional_plot_keywords)
+
+
         if not stacked_plots:
-            axis_case = [plot_conv, plot_mn, plot_mw]
+            axis_case = [plot_conv, plot_mn, plot_mw, plot_semilog]
             match axis_case:
                 # conversion only
-                case [True, False, False]:
+                case [True, False, False, False]:
                     exp_fig.update_layout(
                         yaxis=dict(range=[-0.1, 1]), xaxis_title="Time [h]", yaxis_title="Conversion")
                 # any of Mn Mw
-                case [False, True, True] | [False, False, True] | [False, True, False]:
+                case [False, True, True, False] | [False, False, True, False] | [False, True, False, False]:
                     exp_fig.update_layout(
                         yaxis=dict(range=[0, 50000]), xaxis_title="Time [h]",
                         yaxis_title="M<sub>n</sub>/M<sub>w</sub> [g/mol]")
                 # conversion and any of Mn Mw
-                case [True, True, True] | [True, True, False] | [True, False, True]:
+                case [True, True, True, False] | [True, True, False, False] | [True, False, True, False]:
                     exp_fig.update_layout(
                         yaxis_title="Conversion and M<sub>n</sub>/M<sub>w</sub> [g/mol] · 10<sup>5</sup>",
                         overwrite=True)
+                # semi-logarithmic plot
+                case [False, False, False, True]:
+                    exp_fig.update_layout(
+                        yaxis_title="Ln([M]<sub>0</sub>/[M]<sub>t</sub>)", xaxis_title="Time [h]"
+                        )
                 case _:
                     pass
+
         return exp_fig
 
     def find_optimal_synthesis(self, monomer: str | list):
